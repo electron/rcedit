@@ -55,7 +55,9 @@ class ResourceUpdater {
   bool ChangeVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value);
   bool ChangeVersionString(const WCHAR* name, const WCHAR* value);
   bool ChangeVersionProductVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
+  bool ChangeVersionProductVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
   bool ChangeVersionFileVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
+  bool ChangeVersionFileVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
   bool ChangeString(const WORD& languageId, const UINT& id, const WCHAR* value);
   bool ChangeString(const UINT& id, const WCHAR* value);
   bool Commit();

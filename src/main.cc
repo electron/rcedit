@@ -12,13 +12,27 @@ bool print_error(const char* message) {
   return 1;
 }
 
+bool parse_version_string(const wchar_t* str, int *v1, int *v2, int *v3, int *v4) {
+  *v1 = *v2 = *v3 = *v4 = 0;
+  if (swscanf_s(str, L"%d.%d.%d.%d", v1, v2, v3, v4) == 4)
+    return true;
+  if (swscanf_s(str, L"%d.%d.%d", v1, v2, v3) == 3)
+    return true;
+  if (swscanf_s(str, L"%d.%d", v1, v2) == 2)
+    return true;
+  if (swscanf_s(str, L"%d", v1) == 1)
+    return true;
+
+  return false;
+}
+
 int wmain(int argc, const wchar_t* argv[]) {
   bool loaded = false;
   rescle::ResourceUpdater updater;
 
   for (int i = 1; i < argc; ++i) {
     if (wcscmp(argv[i], L"--set-version-string") == 0 ||
-        wcscmp(argv[i], L"-s") == 0) {
+        wcscmp(argv[i], L"-svs") == 0) {
       if (argc - i < 3)
         return print_error("--set-version-string requires 'Key' and 'Value'");
 
@@ -26,6 +40,28 @@ int wmain(int argc, const wchar_t* argv[]) {
       const wchar_t* value = argv[++i];
       if (!updater.ChangeVersionString(key, value))
         return print_error("Unable to change version string");
+    } else if (wcscmp(argv[i], L"--set-file-version") == 0 ||
+               wcscmp(argv[i], L"-sfv") == 0) {
+      if (argc - i < 2)
+        return print_error("--set-file-version requires a version string");
+
+      int v1, v2, v3, v4;
+      if (!parse_version_string(argv[++i], &v1, &v2, &v3, &v4))
+        return print_error("Unable to parse version string");
+
+      if (!updater.ChangeVersionFileVersion(v1, v2, v3, v4))
+        return print_error("Unable to change file version");
+    } else if (wcscmp(argv[i], L"--set-product-version") == 0 ||
+               wcscmp(argv[i], L"-spv") == 0) {
+      if (argc - i < 2)
+        return print_error("--set-product-version requires a version string");
+
+      int v1, v2, v3, v4;
+      if (!parse_version_string(argv[++i], &v1, &v2, &v3, &v4))
+        return print_error("Unable to parse version string");
+
+      if (!updater.ChangeVersionProductVersion(v1, v2, v3, v4))
+        return print_error("Unable to change product version");
     } else {
       if (loaded)
         return print_error("Unexpected trailing arguments");

@@ -1,6 +1,7 @@
 Default/
 ipch/
 
+*.swp
 *.sdf
 *.suo
 *.vcxproj.user

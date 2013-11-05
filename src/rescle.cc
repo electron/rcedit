@@ -168,6 +168,14 @@ bool ResourceUpdater::ChangeVersionProductVersion(const WORD& languageId, const 
   return true;
 }
 
+bool ResourceUpdater::ChangeVersionProductVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+  if (versionStampMap.size() < 1) {
+    return false;
+  } else {
+    return ChangeVersionProductVersion(versionStampMap.begin()->first, 1, v1, v2, v3, v4);
+  }
+}
+
 bool ResourceUpdater::ChangeVersionFileVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
@@ -183,6 +191,14 @@ bool ResourceUpdater::ChangeVersionFileVersion(const WORD& languageId, const UIN
   root->dwFileVersionMS = v1 << 16 | v2;
   root->dwFileVersionLS = v3 << 16 | v4;
   return true;
+}
+
+bool ResourceUpdater::ChangeVersionFileVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+  if (versionStampMap.size() < 1) {
+    return false;
+  } else {
+    return ChangeVersionFileVersion(versionStampMap.begin()->first, 1, v1, v2, v3, v4);
+  }
 }
 
 bool ResourceUpdater::ChangeString(const WORD& languageId, const UINT& id, const WCHAR* value) {
