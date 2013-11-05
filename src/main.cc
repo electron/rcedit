@@ -51,6 +51,9 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.ChangeVersionFileVersion(v1, v2, v3, v4))
         return print_error("Unable to change file version");
+
+      if (!updater.ChangeVersionString(L"FileVersion", argv[i]))
+        return print_error("Unable to change FileVersion string");
     } else if (wcscmp(argv[i], L"--set-product-version") == 0 ||
                wcscmp(argv[i], L"-spv") == 0) {
       if (argc - i < 2)
@@ -60,8 +63,11 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (!parse_version_string(argv[++i], &v1, &v2, &v3, &v4))
         return print_error("Unable to parse version string");
 
-      if (!updater.ChangeVersionProductVersion(v1, v2, v3, v4))
-        return print_error("Unable to change product version");
+      if (!updater.ChangeVersionFileVersion(v1, v2, v3, v4))
+        return print_error("Unable to change file version");
+
+      if (!updater.ChangeVersionString(L"ProductVersion", argv[i]))
+        return print_error("Unable to change ProductVersion string");
     } else {
       if (loaded)
         return print_error("Unexpected trailing arguments");
