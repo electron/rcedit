@@ -1,6 +1,9 @@
 // Copyright (c) 2013 GitHub, Inc. All rights reserved.
 // Use of this source code is governed by MIT license that can be found in the
 // LICENSE file.
+//
+// This file is modified from Rescle written by yoshio.okumura@gmail.com:
+// http://code.google.com/p/rescle/
 
 #ifndef VERSION_INFO_UPDATER
 #define VERSION_INFO_UPDATER
