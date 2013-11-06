@@ -49,7 +49,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (!parse_version_string(argv[++i], &v1, &v2, &v3, &v4))
         return print_error("Unable to parse version string");
 
-      if (!updater.ChangeVersionFileVersion(v1, v2, v3, v4))
+      if (!updater.SetFileVersion(v1, v2, v3, v4))
         return print_error("Unable to change file version");
 
       if (!updater.SetVersionString(L"FileVersion", argv[i]))
@@ -63,7 +63,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (!parse_version_string(argv[++i], &v1, &v2, &v3, &v4))
         return print_error("Unable to parse version string");
 
-      if (!updater.ChangeVersionFileVersion(v1, v2, v3, v4))
+      if (!updater.SetProductVersion(v1, v2, v3, v4))
         return print_error("Unable to change file version");
 
       if (!updater.SetVersionString(L"ProductVersion", argv[i]))

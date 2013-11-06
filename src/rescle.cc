@@ -161,7 +161,7 @@ bool ResourceUpdater::SetVersionString(const WCHAR* name, const WCHAR* value) {
   }
 }
 
-bool ResourceUpdater::ChangeVersionProductVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+bool ResourceUpdater::SetProductVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
   }
@@ -179,15 +179,15 @@ bool ResourceUpdater::ChangeVersionProductVersion(const WORD& languageId, const 
   return true;
 }
 
-bool ResourceUpdater::ChangeVersionProductVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+bool ResourceUpdater::SetProductVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
   if (versionStampMap.size() < 1) {
     return false;
   } else {
-    return ChangeVersionProductVersion(versionStampMap.begin()->first, 1, v1, v2, v3, v4);
+    return SetProductVersion(versionStampMap.begin()->first, 1, v1, v2, v3, v4);
   }
 }
 
-bool ResourceUpdater::ChangeVersionFileVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+bool ResourceUpdater::SetFileVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
   }
@@ -204,11 +204,11 @@ bool ResourceUpdater::ChangeVersionFileVersion(const WORD& languageId, const UIN
   return true;
 }
 
-bool ResourceUpdater::ChangeVersionFileVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+bool ResourceUpdater::SetFileVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
   if (versionStampMap.size() < 1) {
     return false;
   } else {
-    return ChangeVersionFileVersion(versionStampMap.begin()->first, 1, v1, v2, v3, v4);
+    return SetFileVersion(versionStampMap.begin()->first, 1, v1, v2, v3, v4);
   }
 }
 
