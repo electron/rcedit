@@ -12,6 +12,30 @@ namespace rescle {
 
 namespace {
 
+#pragma pack(push,2)
+typedef struct _GRPICONENTRY {
+  BYTE width;
+  BYTE height;
+  BYTE colourCount;
+  BYTE reserved;
+  BYTE planes;
+  BYTE bitCount;
+  WORD bytesInRes;
+  WORD bytesInRes2;
+  WORD reserved2;
+  WORD id;
+} GRPICONENTRY;
+#pragma pack(pop)
+
+#pragma pack(push,2)
+typedef struct _GRPICONHEADER {
+  WORD reserved;
+  WORD type;
+  WORD count;
+  GRPICONENTRY entries[1];
+} GRPICONHEADER;
+#pragma pack(pop)
+
 #pragma pack(push,1)
 typedef struct _VS_VERSION_HEADER {
   WORD wLength;
@@ -51,6 +75,18 @@ unsigned short round(const unsigned short& value,
                      const unsigned short& modula = 4) {
   return value + ((value % modula > 0) ? (modula - value % modula) : 0);
 }
+
+class ScopedFile {
+ public:
+  ScopedFile(const WCHAR* path)
+    : hFile(CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) {}
+  ~ScopedFile() { CloseHandle(hFile); }
+
+  operator HANDLE() { return hFile; }
+
+ private:
+  HANDLE hFile;
+};
 
 }  // namespace
 
@@ -239,6 +275,54 @@ bool ResourceUpdater::ChangeString(const UINT& id, const WCHAR* value) {
   }
 }
 
+bool ResourceUpdater::SetIcon(const WCHAR* path) {
+  DWORD bytes;
+
+  ScopedFile file(path);
+  if (file == INVALID_HANDLE_VALUE)
+    return false;
+
+  IconsValue::ICONHEADER& header = icon.header;
+  if (!ReadFile(file, &header, 3 * sizeof(WORD), &bytes, NULL))
+    return false;
+
+  if (header.reserved != 0 || header.type != 1)
+    return false;
+
+  header.entries.resize(header.count);
+  if (!ReadFile(file, header.entries.data(), header.count * sizeof(IconsValue::ICONENTRY), &bytes, NULL))
+    return false;
+
+  icon.images.resize(header.count);
+  for (size_t i = 0; i < header.count; ++i) {
+    icon.images[i].resize(header.entries[i].bytesInRes);
+    SetFilePointer(file, header.entries[i].imageOffset, NULL, FILE_BEGIN);
+    if (!ReadFile(file, icon.images[i].data(), icon.images[i].size(), &bytes, NULL))
+      return false;
+  }
+
+  icon.grpHeader.resize(3 * sizeof(WORD) + header.count * sizeof(GRPICONENTRY));
+  GRPICONHEADER* pGrpHeader = reinterpret_cast<GRPICONHEADER*>(icon.grpHeader.data());
+  pGrpHeader->reserved = 0;
+  pGrpHeader->type = 1;
+  pGrpHeader->count = header.count;
+  for (size_t i = 0; i < header.count; ++i) {
+    GRPICONENTRY* entry = pGrpHeader->entries + i;
+    entry->bitCount    = 0;
+    entry->bytesInRes  = header.entries[i].bitCount;
+    entry->bytesInRes2 = header.entries[i].bytesInRes;
+    entry->colourCount = header.entries[i].colorCount;
+    entry->height      = header.entries[i].height;
+    entry->id          = i + 1;
+    entry->planes      = header.entries[i].planes;
+    entry->reserved    = header.entries[i].reserved;
+    entry->width       = header.entries[i].width;
+    entry->reserved2   = 0;
+  }
+
+  return true;
+}
+
 bool ResourceUpdater::Commit() {
   if (hModule == NULL) {
     return false;
@@ -288,6 +372,33 @@ bool ResourceUpdater::Commit() {
         , MAKEINTRESOURCE(j->first + 1)
         , i->first
         , &stringTableBuffer[0], static_cast<DWORD>(stringTableBuffer.size()))) {
+
+        return false;
+      }
+    }
+  }
+
+  // update icon.
+  if (icon.grpHeader.size() > 0) {
+    if (!UpdateResource
+      (ru.Get()
+      , RT_GROUP_ICON
+      , MAKEINTRESOURCE(1)
+      , MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)
+      , icon.grpHeader.data()
+      , icon.grpHeader.size())) {
+
+      return false;
+    }
+
+    for (size_t i = 0; i < icon.header.count; ++i) {
+      if (!UpdateResource
+        (ru.Get()
+        , RT_ICON
+        , MAKEINTRESOURCE(i + 1)
+        , MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+        , icon.images[i].data()
+        , icon.images[i].size())) {
 
         return false;
       }

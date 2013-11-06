@@ -37,6 +37,31 @@ class VersionStampValue {
   unsigned short GetLength(const bool& rounding = true) const;
 };
 
+class IconsValue {
+ public:
+  typedef struct _ICONENTRY {
+    BYTE width;
+    BYTE height;
+    BYTE colorCount;
+    BYTE reserved;
+    WORD planes;
+    WORD bitCount;
+    DWORD bytesInRes;
+    DWORD imageOffset;
+  } ICONENTRY;
+
+  typedef struct _ICONHEADER {
+    WORD reserved;
+    WORD type;
+    WORD count;
+    std::vector<ICONENTRY> entries;
+  } ICONHEADER;
+
+  ICONHEADER header;
+  std::vector<std::vector<BYTE>> images;
+  std::vector<BYTE> grpHeader;
+};
+
 class ResourceUpdater {
  public:
   typedef std::vector<std::wstring> StringValues;
@@ -60,6 +85,7 @@ class ResourceUpdater {
   bool SetFileVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
   bool ChangeString(const WORD& languageId, const UINT& id, const WCHAR* value);
   bool ChangeString(const UINT& id, const WCHAR* value);
+  bool SetIcon(const WCHAR* path);
   bool Commit();
 
   static bool UpdateRaw(const char* filename, const WORD& languageId, const char* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
@@ -80,6 +106,7 @@ private:
   std::string filename;
   VersionStampMap versionStampMap;
   StringTableMap stringTableMap;
+  IconsValue icon;
 };
 
 class ScopedResoueceUpdater {

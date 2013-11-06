@@ -40,6 +40,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       const wchar_t* value = argv[++i];
       if (!updater.SetVersionString(key, value))
         return print_error("Unable to change version string");
+
     } else if (wcscmp(argv[i], L"--set-file-version") == 0 ||
                wcscmp(argv[i], L"-sfv") == 0) {
       if (argc - i < 2)
@@ -54,6 +55,7 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetVersionString(L"FileVersion", argv[i]))
         return print_error("Unable to change FileVersion string");
+
     } else if (wcscmp(argv[i], L"--set-product-version") == 0 ||
                wcscmp(argv[i], L"-spv") == 0) {
       if (argc - i < 2)
@@ -68,6 +70,15 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetVersionString(L"ProductVersion", argv[i]))
         return print_error("Unable to change ProductVersion string");
+
+    } else if (wcscmp(argv[i], L"--set-icon") == 0 ||
+               wcscmp(argv[i], L"-si") == 0) {
+      if (argc - i < 2)
+        return print_error("--set-icon requires path to the icon");
+
+      if (!updater.SetIcon(argv[++i]))
+        return print_error("Unable to set icon");
+
     } else {
       if (loaded)
         return print_error("Unexpected trailing arguments");
@@ -75,6 +86,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       loaded = true;
       if (!updater.Load(argv[i]))
         return print_error("Unable to load file");
+
     }
   }
 
