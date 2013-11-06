@@ -17,6 +17,7 @@
         'src/main.cc',
         'src/rescle.cc',
         'src/rescle.h',
+        'src/rcedit.rc',
       ],
       'msvs_settings': {
         'VCLinkerTool': {
