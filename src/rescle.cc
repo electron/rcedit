@@ -117,7 +117,7 @@ bool ResourceUpdater::Load(const char* filename) {
   return true;
 }
 
-bool ResourceUpdater::ChangeVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value) {
+bool ResourceUpdater::SetVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
   }
@@ -125,28 +125,39 @@ bool ResourceUpdater::ChangeVersionString(const WORD& languageId, const WCHAR* n
   VersionStampTable& table = versionStampMap[languageId];
 
   std::wstring nameStr(name);
+  std::wstring valueStr(value);
+  size_t sizeWithoutNull = (valueStr.size() + 0) * 2; // not null-terminated.
+  size_t sizeWithNull = round((valueStr.size() + 1) * 2); // null-terminated.
+
+  std::vector<char> data;
+  data.resize(sizeWithNull);
+  memset(&(data[0]), 0, sizeWithNull);
+  memcpy(&(data[0]), &valueStr[0], sizeWithoutNull);
 
   for (VersionStampTable::iterator i = table.begin(); i != table.end(); i++) {
     for (VersionStampValues::iterator j = i->second.begin(); j != i->second.end(); j++) {
       if (j->szKey == nameStr) {
-        std::wstring valueStr(value);
-        size_t sizeWithoutNull = (valueStr.size() + 0) * 2; // not null-terminated.
-        size_t sizeWithNull = round((valueStr.size() + 1) * 2); // null-terminated.
-        j->Data.resize(sizeWithNull);
-        memset(&(j->Data[0]), 0, j->Data.size());
-        memcpy(&(j->Data[0]), &valueStr[0], sizeWithoutNull);
+        j->Data = data;
         return true;
       }
     }
+
+    // Not found, append one for all tables.
+    if (i->second.size() > 4) {
+      VersionStampValue entry = { 0, 0, 0, 0, nameStr };
+      entry.Data = data;
+      i->second.insert(i->second.end() - 2, entry);
+    }
   }
-  return false;
+
+  return true;
 }
 
-bool ResourceUpdater::ChangeVersionString(const WCHAR* name, const WCHAR* value) {
+bool ResourceUpdater::SetVersionString(const WCHAR* name, const WCHAR* value) {
   if (versionStampMap.size() < 1) {
     return false;
   } else {
-    return ChangeVersionString(versionStampMap.begin()->first, name, value);
+    return SetVersionString(versionStampMap.begin()->first, name, value);
   }
 }
 

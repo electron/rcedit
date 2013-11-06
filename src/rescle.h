@@ -52,8 +52,8 @@ class ResourceUpdater {
 
   bool Load(const WCHAR* filename);
   bool Load(const char* filename);
-  bool ChangeVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value);
-  bool ChangeVersionString(const WCHAR* name, const WCHAR* value);
+  bool SetVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value);
+  bool SetVersionString(const WCHAR* name, const WCHAR* value);
   bool ChangeVersionProductVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
   bool ChangeVersionProductVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
   bool ChangeVersionFileVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);

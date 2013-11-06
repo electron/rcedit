@@ -38,7 +38,7 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       const wchar_t* key = argv[++i];
       const wchar_t* value = argv[++i];
-      if (!updater.ChangeVersionString(key, value))
+      if (!updater.SetVersionString(key, value))
         return print_error("Unable to change version string");
     } else if (wcscmp(argv[i], L"--set-file-version") == 0 ||
                wcscmp(argv[i], L"-sfv") == 0) {
@@ -52,7 +52,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (!updater.ChangeVersionFileVersion(v1, v2, v3, v4))
         return print_error("Unable to change file version");
 
-      if (!updater.ChangeVersionString(L"FileVersion", argv[i]))
+      if (!updater.SetVersionString(L"FileVersion", argv[i]))
         return print_error("Unable to change FileVersion string");
     } else if (wcscmp(argv[i], L"--set-product-version") == 0 ||
                wcscmp(argv[i], L"-spv") == 0) {
@@ -66,7 +66,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (!updater.ChangeVersionFileVersion(v1, v2, v3, v4))
         return print_error("Unable to change file version");
 
-      if (!updater.ChangeVersionString(L"ProductVersion", argv[i]))
+      if (!updater.SetVersionString(L"ProductVersion", argv[i]))
         return print_error("Unable to change ProductVersion string");
     } else {
       if (loaded)
