@@ -387,7 +387,7 @@ bool ResourceUpdater::Commit() {
       (ru.Get()
       , RT_GROUP_ICON
       , MAKEINTRESOURCE(1)
-      , MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)
+      , MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
       , icon.grpHeader.data()
       , icon.grpHeader.size())) {
 
