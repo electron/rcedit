@@ -112,10 +112,10 @@ private:
   IconsValue icon;
 };
 
-class ScopedResoueceUpdater {
+class ScopedResourceUpdater {
  public:
-  ScopedResoueceUpdater(const char* filename, const bool& deleteOld);
-  ~ScopedResoueceUpdater();
+  ScopedResourceUpdater(const char* filename, const bool& deleteOld);
+  ~ScopedResourceUpdater();
 
   HANDLE Get() const;
   bool Commit();
