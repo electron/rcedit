@@ -333,7 +333,7 @@ bool ResourceUpdater::Commit() {
   FreeLibrary(hModule);
   hModule = NULL;
 
-  ScopedResoueceUpdater ru(filename.c_str(), false);
+  ScopedResourceUpdater ru(filename.c_str(), false);
   if (ru.Get() == NULL) {
     return false;
   }
@@ -453,7 +453,7 @@ bool ResourceUpdater::UpdateRaw
 , const size_t& dataSize
 , const bool& deleteOld) {
 
-  ScopedResoueceUpdater ru(filename, deleteOld);
+  ScopedResourceUpdater ru(filename, deleteOld);
   if (ru.Get() == NULL) {
     return false;
   }
@@ -622,28 +622,28 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceName(HMODULE hModule, LPCTSTR lpszT
   return TRUE;
 }
 
-ScopedResoueceUpdater::ScopedResoueceUpdater(const char* filename, const bool& deleteOld)
+ScopedResourceUpdater::ScopedResourceUpdater(const char* filename, const bool& deleteOld)
 : handle(NULL)
 , commited(false) {
   handle = BeginUpdateResource(filename, deleteOld ? TRUE : FALSE);
 }
 
-ScopedResoueceUpdater::~ScopedResoueceUpdater() {
+ScopedResourceUpdater::~ScopedResourceUpdater() {
   if (!commited) {
     EndUpdate(false);
   }
 }
 
-HANDLE ScopedResoueceUpdater::Get() const {
+HANDLE ScopedResourceUpdater::Get() const {
   return handle;
 }
 
-bool ScopedResoueceUpdater::Commit() {
+bool ScopedResourceUpdater::Commit() {
   commited = true;
   return EndUpdate(true);
 }
 
-bool ScopedResoueceUpdater::EndUpdate(const bool& doesCommit) {
+bool ScopedResourceUpdater::EndUpdate(const bool& doesCommit) {
   BOOL fDiscard = doesCommit ? FALSE : TRUE;
   BOOL bResult = EndUpdateResource(handle, fDiscard);
   DWORD e = GetLastError();
