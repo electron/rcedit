@@ -12,15 +12,15 @@ bool print_error(const char* message) {
   return 1;
 }
 
-bool parse_version_string(const wchar_t* str, int *v1, int *v2, int *v3, int *v4) {
+bool parse_version_string(const wchar_t* str, unsigned short *v1, unsigned short *v2, unsigned short *v3, unsigned short *v4) {
   *v1 = *v2 = *v3 = *v4 = 0;
-  if (swscanf_s(str, L"%d.%d.%d.%d", v1, v2, v3, v4) == 4)
+  if (swscanf_s(str, L"%hu.%hu.%hu.%hu", v1, v2, v3, v4) == 4)
     return true;
-  if (swscanf_s(str, L"%d.%d.%d", v1, v2, v3) == 3)
+  if (swscanf_s(str, L"%hu.%hu.%hu", v1, v2, v3) == 3)
     return true;
-  if (swscanf_s(str, L"%d.%d", v1, v2) == 2)
+  if (swscanf_s(str, L"%hu.%hu", v1, v2) == 2)
     return true;
-  if (swscanf_s(str, L"%d", v1) == 1)
+  if (swscanf_s(str, L"%hu", v1) == 1)
     return true;
 
   return false;
@@ -46,7 +46,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (argc - i < 2)
         return print_error("--set-file-version requires a version string");
 
-      int v1, v2, v3, v4;
+      unsigned short v1, v2, v3, v4;
       if (!parse_version_string(argv[++i], &v1, &v2, &v3, &v4))
         return print_error("Unable to parse version string");
 
@@ -61,7 +61,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (argc - i < 2)
         return print_error("--set-product-version requires a version string");
 
-      int v1, v2, v3, v4;
+	  unsigned short v1, v2, v3, v4;
       if (!parse_version_string(argv[++i], &v1, &v2, &v3, &v4))
         return print_error("Unable to parse version string");
 

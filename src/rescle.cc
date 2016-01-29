@@ -200,7 +200,7 @@ bool ResourceUpdater::SetVersionString(const WCHAR* name, const WCHAR* value) {
   }
 }
 
-bool ResourceUpdater::SetProductVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+bool ResourceUpdater::SetProductVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
   }
@@ -218,7 +218,7 @@ bool ResourceUpdater::SetProductVersion(const WORD& languageId, const UINT& id, 
   return true;
 }
 
-bool ResourceUpdater::SetProductVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+bool ResourceUpdater::SetProductVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4) {
   if (versionStampMap.size() < 1) {
     return false;
   } else {
@@ -226,7 +226,7 @@ bool ResourceUpdater::SetProductVersion(const unsigned char& v1, const unsigned 
   }
 }
 
-bool ResourceUpdater::SetFileVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+bool ResourceUpdater::SetFileVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
   }
@@ -243,7 +243,7 @@ bool ResourceUpdater::SetFileVersion(const WORD& languageId, const UINT& id, con
   return true;
 }
 
-bool ResourceUpdater::SetFileVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4) {
+bool ResourceUpdater::SetFileVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4) {
   if (versionStampMap.size() < 1) {
     return false;
   } else {

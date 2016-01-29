@@ -82,10 +82,10 @@ class ResourceUpdater {
   bool Load(const char* filename);
   bool SetVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value);
   bool SetVersionString(const WCHAR* name, const WCHAR* value);
-  bool SetProductVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
-  bool SetProductVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
-  bool SetFileVersion(const WORD& languageId, const UINT& id, const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
-  bool SetFileVersion(const unsigned char& v1, const unsigned char& v2, const unsigned char& v3, const unsigned char& v4);
+  bool SetProductVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
+  bool SetProductVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
+  bool SetFileVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
+  bool SetFileVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
   bool ChangeString(const WORD& languageId, const UINT& id, const WCHAR* value);
   bool ChangeString(const UINT& id, const WCHAR* value);
   bool SetIcon(const WCHAR* path);
