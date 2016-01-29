@@ -61,7 +61,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (argc - i < 2)
         return print_error("--set-product-version requires a version string");
 
-	  unsigned short v1, v2, v3, v4;
+      unsigned short v1, v2, v3, v4;
       if (!parse_version_string(argv[++i], &v1, &v2, &v3, &v4))
         return print_error("Unable to parse version string");
 
