@@ -15,6 +15,8 @@ Set version string:
 $ rcedit "path-to-exe-or-dll" --set-version-string "Comments" "This is an exe"
 ```
 
+Use this option to change any supported properties, as described in the MSDN documentation [here](https://msdn.microsoft.com/en-us/library/windows/desktop/aa381058(v=vs.85).aspx)
+
 Set file version:
 
 ```bash
