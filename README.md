@@ -2,6 +2,9 @@
 
 Command line tool to edit resources of exe file on Windows
 
+Requires `Microsoft Visual C++ Redistributable Packages for Visual Studio 2013`:
+http://www.microsoft.com/en-us/download/details.aspx?id=40784
+
 ## Building
   * Clone the repository
   * Run `gyp rcedit.gyp --depth .`
