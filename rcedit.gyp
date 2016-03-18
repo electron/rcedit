@@ -26,6 +26,7 @@
         'VCCLCompilerTool': {
           'Optimization': 3, # /Ox, full optimization
           'FavorSizeOrSpeed': 1, # /Os, favour small code
+          'RuntimeLibrary': 0, # /MT, for statically linked runtime
         },
       },
       'conditions': [
