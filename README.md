@@ -34,6 +34,12 @@ Set icon:
 $ rcedit "path-to-exe-or-dll" --set-icon "path-to-ico"
 ```
 
+Set resource string:
+
+```bash
+$ rcedit "path-to-exe-or-dll" --set-resource-string id_number "new string value"
+```
+
 And you can change multiple things in one command:
 
 ```bash
