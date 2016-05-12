@@ -3,6 +3,7 @@
 Command line tool to edit resources of exe file on Windows
 
 ## Building
+  * Make sure you have gyp is configured in your system. If not, clone gyp from https://chromium.googlesource.com/external/gyp
   * Clone the repository
   * Run `gyp rcedit.gyp --depth .`
   * Build rcedit.sln with Visual Studio
