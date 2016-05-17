@@ -78,23 +78,20 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetIcon(argv[++i]))
         return print_error("Unable to set icon");
-    
-    } 
-	else if (wcscmp(argv[i], L"--set-resource-string") == 0 ||
-		wcscmp(argv[i], L"--srs") == 0) {
-		if (argc - i < 3)
-			return print_error("--set-resource-string requires int 'Key' and string 'Value'");
+    } else if (wcscmp(argv[i], L"--set-resource-string") == 0 ||
+      wcscmp(argv[i], L"--srs") == 0) {
+      if (argc - i < 3)
+        return print_error("--set-resource-string requires int 'Key' and string 'Value'");
 
-		const wchar_t* key = argv[++i];
-		unsigned int key_id = 0;
-		if (swscanf_s(key, L"%d", &key_id) != 1)
-			return print_error("Unable to parse id");
+      const wchar_t* key = argv[++i];
+      unsigned int key_id = 0;
+      if (swscanf_s(key, L"%d", &key_id) != 1)
+        return print_error("Unable to parse id");
 
-		const wchar_t* value = argv[++i];
-		if (!updater.ChangeString(key_id, value))
-			return print_error("Unable to change string");
-
-	} else {
+      const wchar_t* value = argv[++i];
+      if (!updater.ChangeString(key_id, value))
+        return print_error("Unable to change string");
+    } else {
       if (loaded)
         return print_error("Unexpected trailing arguments");
 
