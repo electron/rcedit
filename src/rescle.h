@@ -91,7 +91,7 @@ class ResourceUpdater {
   bool SetIcon(const WCHAR* path);
   bool Commit();
 
-  static bool UpdateRaw(const char* filename, const WORD& languageId, const char* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
+  static bool UpdateRaw(const wchar_t* filename, const WORD& languageId, const char* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
   static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const char* type, void*& data, size_t& dataSize);
 
 private:
@@ -106,7 +106,7 @@ private:
   static BOOL CALLBACK OnEnumResourceLanguage(HANDLE hModule, LPCTSTR lpszType, LPCTSTR lpszName, WORD wIDLanguage, LONG_PTR lParam);
 
   HMODULE hModule;
-  std::string filename;
+  LPCWSTR filename;
   VersionStampMap versionStampMap;
   StringTableMap stringTableMap;
   IconsValue icon;
@@ -114,7 +114,7 @@ private:
 
 class ScopedResourceUpdater {
  public:
-  ScopedResourceUpdater(const char* filename, const bool& deleteOld);
+  ScopedResourceUpdater(const wchar_t* filename, const bool& deleteOld);
   ~ScopedResourceUpdater();
 
   HANDLE Get() const;

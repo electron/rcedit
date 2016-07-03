@@ -110,16 +110,8 @@ ResourceUpdater::~ResourceUpdater() {
   }
 }
 
-bool ResourceUpdater::Load(const WCHAR* wfilename) {
-  int size = WideCharToMultiByte(CP_UTF8, 0, wfilename, -1, NULL, 0, NULL, NULL);
-  char* filename = static_cast<char*>(alloca(size));
-  WideCharToMultiByte(CP_UTF8, 0, wfilename, -1, filename, size, NULL, NULL);
-
-  return Load(filename);
-}
-
-bool ResourceUpdater::Load(const char* filename) {
-  hModule = LoadLibraryEx(filename, NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
+bool ResourceUpdater::Load(const wchar_t* filename) {
+  hModule = LoadLibraryExW(filename, NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
   if (hModule == NULL) {
     return false;
   }
@@ -333,7 +325,7 @@ bool ResourceUpdater::Commit() {
   FreeLibrary(hModule);
   hModule = NULL;
 
-  ScopedResourceUpdater ru(filename.c_str(), false);
+  ScopedResourceUpdater ru(filename, false);
   if (ru.Get() == NULL) {
     return false;
   }
@@ -445,7 +437,7 @@ bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& lan
 
 // static
 bool ResourceUpdater::UpdateRaw
-(const char* filename
+(const wchar_t* filename
 , const WORD& languageId
 , const char* type
 , const UINT& id
@@ -622,10 +614,10 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceName(HMODULE hModule, LPCTSTR lpszT
   return TRUE;
 }
 
-ScopedResourceUpdater::ScopedResourceUpdater(const char* filename, const bool& deleteOld)
+ScopedResourceUpdater::ScopedResourceUpdater(const wchar_t* filename, const bool& deleteOld)
 : handle(NULL)
 , commited(false) {
-  handle = BeginUpdateResource(filename, deleteOld ? TRUE : FALSE);
+  handle = BeginUpdateResourceW(filename, deleteOld ? TRUE : FALSE);
 }
 
 ScopedResourceUpdater::~ScopedResourceUpdater() {
