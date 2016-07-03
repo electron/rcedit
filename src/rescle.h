@@ -106,7 +106,7 @@ private:
   static BOOL CALLBACK OnEnumResourceLanguage(HANDLE hModule, LPCTSTR lpszType, LPCTSTR lpszName, WORD wIDLanguage, LONG_PTR lParam);
 
   HMODULE hModule;
-  LPCWSTR filename;
+  std::wstring filename;
   VersionStampMap versionStampMap;
   StringTableMap stringTableMap;
   IconsValue icon;

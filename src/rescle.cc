@@ -325,7 +325,7 @@ bool ResourceUpdater::Commit() {
   FreeLibrary(hModule);
   hModule = NULL;
 
-  ScopedResourceUpdater ru(filename, false);
+  ScopedResourceUpdater ru(filename.c_str(), false);
   if (ru.Get() == NULL) {
     return false;
   }
