@@ -20,7 +20,7 @@
 #define RU_VS_FILE_VERSION      L"FileVersion"
 #define RU_VS_INTERNAL_NAME     L"InternalName"
 #define RU_VS_LEGAL_COPYRIGHT   L"LegalCopyright"
-#define RU_VS_LEGALLRADEMARKS   L"LegalTrademarks"
+#define RU_VS_LEGAL_TRADEMARKS  L"LegalTrademarks"
 #define RU_VS_ORIGINAL_FILENAME L"OriginalFilename"
 #define RU_VS_PRIVATE_BUILD     L"PrivateBuild"
 #define RU_VS_PRODUCT_NAME      L"ProductName"
