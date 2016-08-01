@@ -3,7 +3,6 @@
 // LICENSE file.
 
 #include <string.h>
-#include <stdlib.h>
 
 #include "rescle.h"
 

@@ -9,7 +9,6 @@
 
 #include <assert.h>
 #include <atlstr.h>
-#include <malloc.h>
 
 namespace rescle {
 
