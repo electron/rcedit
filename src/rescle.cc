@@ -408,8 +408,7 @@ bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& lan
     return false;
   }
 
-  // FIXME: FindResourceEx failed if same id but different language.
-  HRSRC hRsrc = FindResource(hModule, MAKEINTRESOURCE(id), type);
+  HRSRC hRsrc = FindResourceEx(hModule, type, MAKEINTRESOURCE(id), languageId);
   if (hRsrc == NULL) {
     DWORD e = GetLastError();
     return false;
