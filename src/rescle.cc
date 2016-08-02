@@ -109,7 +109,7 @@ ResourceUpdater::~ResourceUpdater() {
   }
 }
 
-bool ResourceUpdater::Load(const wchar_t* filename) {
+bool ResourceUpdater::Load(const WCHAR* filename) {
   hModule = LoadLibraryExW(filename, NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
   if (hModule == NULL) {
     return false;
