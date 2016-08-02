@@ -8,6 +8,14 @@
 #ifndef VERSION_INFO_UPDATER
 #define VERSION_INFO_UPDATER
 
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+
+#ifndef UNICODE
+#define UNICODE
+#endif
+
 #include <string>
 #include <vector>
 #include <map>
@@ -90,8 +98,8 @@ class ResourceUpdater {
   bool SetIcon(const WCHAR* path);
   bool Commit();
 
-  static bool UpdateRaw(const wchar_t* filename, const WORD& languageId, const char* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
-  static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const char* type, void*& data, size_t& dataSize);
+  static bool UpdateRaw(const WCHAR* filename, const WORD& languageId, const WCHAR* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
+  static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, void*& data, size_t& dataSize);
 
 private:
   bool Deserialize(const void* data, const size_t& dataSize, VersionStampValues& values);
@@ -99,10 +107,10 @@ private:
   bool SerializeStringTable(const StringValues& values, const UINT& blockId, std::vector<char>& out);
 
   // not thread-safe
-  static BOOL CALLBACK OnEnumResourceName(HMODULE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG_PTR lParam);
+  static BOOL CALLBACK OnEnumResourceName(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
 
   // not thread-safe
-  static BOOL CALLBACK OnEnumResourceLanguage(HANDLE hModule, LPCTSTR lpszType, LPCTSTR lpszName, WORD wIDLanguage, LONG_PTR lParam);
+  static BOOL CALLBACK OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam);
 
   HMODULE hModule;
   std::wstring filename;
@@ -113,7 +121,7 @@ private:
 
 class ScopedResourceUpdater {
  public:
-  ScopedResourceUpdater(const wchar_t* filename, const bool& deleteOld);
+  ScopedResourceUpdater(const WCHAR* filename, const bool& deleteOld);
   ~ScopedResourceUpdater();
 
   HANDLE Get() const;

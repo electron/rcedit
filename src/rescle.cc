@@ -117,8 +117,8 @@ bool ResourceUpdater::Load(const WCHAR* filename) {
 
   this->filename = filename;
 
-  EnumResourceNames(hModule, RT_STRING, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
-  EnumResourceNames(hModule, RT_VERSION, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
+  EnumResourceNamesW(hModule, RT_STRING, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
+  EnumResourceNamesW(hModule, RT_VERSION, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
 
   for (VersionStampMap::iterator i = versionStampMap.begin(); i != versionStampMap.end(); i++) {
     for (VersionStampTable::iterator j = i->second.begin(); j != i->second.end(); j++) {
@@ -138,7 +138,7 @@ bool ResourceUpdater::Load(const WCHAR* filename) {
     for (StringTable::iterator j = i->second.begin(); j != i->second.end(); j++) {
       for (size_t k = 0; k < 16; k++) {
         CStringW buf;
-        buf.LoadString(hModule, j->first * 16 + k, i->first);
+        buf.LoadStringW(hModule, j->first * 16 + k, i->first);
         j->second.push_back(buf.GetBuffer());
       }
     }
@@ -339,10 +339,10 @@ bool ResourceUpdater::Commit() {
         return false;
       }
 
-      if (!UpdateResource
+      if (!UpdateResourceW
         (ru.Get()
         , RT_VERSION
-        , MAKEINTRESOURCE(j->first)
+        , MAKEINTRESOURCEW(j->first)
         , i->first
         , &out[0], static_cast<DWORD>(out.size()))) {
 
@@ -359,10 +359,10 @@ bool ResourceUpdater::Commit() {
         return false;
       }
 
-      if (!UpdateResource
+      if (!UpdateResourceW
         (ru.Get()
         , RT_STRING
-        , MAKEINTRESOURCE(j->first + 1)
+        , MAKEINTRESOURCEW(j->first + 1)
         , i->first
         , &stringTableBuffer[0], static_cast<DWORD>(stringTableBuffer.size()))) {
 
@@ -373,10 +373,10 @@ bool ResourceUpdater::Commit() {
 
   // update icon.
   if (icon.grpHeader.size() > 0) {
-    if (!UpdateResource
+    if (!UpdateResourceW
       (ru.Get()
       , RT_GROUP_ICON
-      , MAKEINTRESOURCE(1)
+      , MAKEINTRESOURCEW(1)
       , MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
       , icon.grpHeader.data()
       , icon.grpHeader.size())) {
@@ -385,10 +385,10 @@ bool ResourceUpdater::Commit() {
     }
 
     for (size_t i = 0; i < icon.header.count; ++i) {
-      if (!UpdateResource
+      if (!UpdateResourceW
         (ru.Get()
         , RT_ICON
-        , MAKEINTRESOURCE(i + 1)
+        , MAKEINTRESOURCEW(i + 1)
         , MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
         , icon.images[i].data()
         , icon.images[i].size())) {
@@ -401,12 +401,12 @@ bool ResourceUpdater::Commit() {
   return ru.Commit();
 }
 
-bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const char* type, void*& data, size_t& dataSize) {
+bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, void*& data, size_t& dataSize) {
   if (!IS_INTRESOURCE(id)) {
     return false;
   }
 
-  HRSRC hRsrc = FindResourceEx(hModule, type, MAKEINTRESOURCE(id), languageId);
+  HRSRC hRsrc = FindResourceExW(hModule, type, MAKEINTRESOURCEW(id), languageId);
   if (hRsrc == NULL) {
     DWORD e = GetLastError();
     return false;
@@ -434,9 +434,9 @@ bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& lan
 
 // static
 bool ResourceUpdater::UpdateRaw
-(const wchar_t* filename
+(const WCHAR* filename
 , const WORD& languageId
-, const char* type
+, const WCHAR* type
 , const UINT& id
 , const void* data
 , const size_t& dataSize
@@ -447,7 +447,7 @@ bool ResourceUpdater::UpdateRaw
     return false;
   }
 
-  if (UpdateResource(ru.Get(), type, MAKEINTRESOURCE(id), languageId, const_cast<void*>(data), static_cast<DWORD>(dataSize))) {
+  if (UpdateResourceW(ru.Get(), type, MAKEINTRESOURCEW(id), languageId, const_cast<void*>(data), static_cast<DWORD>(dataSize))) {
     return ru.Commit();
   } else {
     return false;
@@ -590,7 +590,7 @@ bool ResourceUpdater::SerializeStringTable(const StringValues& values, const UIN
 }
 
 // static
-BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCTSTR lpszType, LPCTSTR lpszName, WORD wIDLanguage, LONG_PTR lParam) {
+BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam) {
   ResourceUpdater* instance = reinterpret_cast<ResourceUpdater*>(lParam);
   if (IS_INTRESOURCE(lpszName) && IS_INTRESOURCE(lpszType)) {
     UINT type1 = reinterpret_cast<UINT>(lpszType);
@@ -606,8 +606,8 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCTSTR lp
 }
 
 // static
-BOOL CALLBACK ResourceUpdater::OnEnumResourceName(HMODULE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG_PTR lParam) {
-  EnumResourceLanguages(hModule, lpszType, lpszName, (ENUMRESLANGPROC) OnEnumResourceLanguage, lParam);
+BOOL CALLBACK ResourceUpdater::OnEnumResourceName(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam) {
+  EnumResourceLanguagesW(hModule, lpszType, lpszName, (ENUMRESLANGPROCW) OnEnumResourceLanguage, lParam);
   return TRUE;
 }
 
@@ -634,7 +634,7 @@ bool ScopedResourceUpdater::Commit() {
 
 bool ScopedResourceUpdater::EndUpdate(const bool& doesCommit) {
   BOOL fDiscard = doesCommit ? FALSE : TRUE;
-  BOOL bResult = EndUpdateResource(handle, fDiscard);
+  BOOL bResult = EndUpdateResourceW(handle, fDiscard);
   DWORD e = GetLastError();
   return bResult ? true : false;
 }
