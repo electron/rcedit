@@ -122,30 +122,6 @@ bool ResourceUpdater::Load(const WCHAR* filename) {
   EnumResourceNamesW(hModule, RT_GROUP_ICON, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
   EnumResourceNamesW(hModule, RT_ICON, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
 
-  for (VersionStampMap::iterator i = versionStampMap.begin(); i != versionStampMap.end(); i++) {
-    for (VersionStampTable::iterator j = i->second.begin(); j != i->second.end(); j++) {
-      BYTE* data = NULL;
-      size_t dataSize = 0;
-      if (!GetResourcePointer(hModule, i->first, j->first, RT_VERSION, data, dataSize)) {
-        return false;
-      }
-      if (!Deserialize(data, dataSize, j->second)) {
-        return false;
-      }
-    }
-  }
-
-  // Load Strings
-  for (StringTableMap::iterator i = stringTableMap.begin(); i != stringTableMap.end(); i++) {
-    for (StringTable::iterator j = i->second.begin(); j != i->second.end(); j++) {
-      for (size_t k = 0; k < 16; k++) {
-        CStringW buf;
-        buf.LoadStringW(hModule, j->first * 16 + k, i->first);
-        j->second.push_back(buf.GetBuffer());
-      }
-    }
-  }
-
   return true;
 }
 
@@ -642,10 +618,30 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
     switch (reinterpret_cast<UINT>(lpszType))
     {
     case reinterpret_cast<UINT>(RT_VERSION):
-      instance->versionStampMap[ wIDLanguage ][ reinterpret_cast<UINT>(lpszName) ].resize(0);
+      {
+        UINT id = reinterpret_cast<UINT>(lpszName);
+        auto& vector = instance->versionStampMap[wIDLanguage][id];
+        BYTE* data = NULL;
+        size_t dataSize = 0;
+        if (!GetResourcePointer(instance->hModule, wIDLanguage, id, RT_VERSION, data, dataSize)) {
+          return false;
+        }
+        if (!instance->Deserialize(data, dataSize, vector)) {
+          return false;
+        }
+      }
       break;
     case reinterpret_cast<UINT>(RT_STRING):
-      instance->stringTableMap[ wIDLanguage ][ reinterpret_cast<UINT>(lpszName) - 1 ].resize(0);
+	  {
+        UINT id = reinterpret_cast<UINT>(lpszName) - 1;
+        auto& vector = instance->stringTableMap[wIDLanguage][id];
+        for (size_t k = 0; k < 16; k++) {
+          CStringW buf;
+
+          buf.LoadStringW(instance->hModule, id * 16 + k, wIDLanguage);
+          vector.push_back(buf.GetBuffer());
+        }
+	  }
       break;
     case reinterpret_cast<UINT>(RT_ICON):
       {
