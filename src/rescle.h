@@ -38,17 +38,6 @@
 
 namespace rescle {
 
-class VersionStampValue {
- public:
-  unsigned short wOffset;
-  unsigned short wLength;
-  unsigned short wKeyLength;
-  unsigned short wType;
-  std::wstring szKey;
-  std::vector<char> Data;
-  unsigned short GetLength(const bool& rounding = true) const;
-};
-
 class IconsValue {
  public:
   typedef struct _ICONENTRY {
@@ -74,21 +63,54 @@ class IconsValue {
   std::vector<BYTE> grpHeader;
 };
 
+struct Translate
+{
+    LANGID wLanguage;
+    WORD wCodePage;
+};
+
+typedef std::pair<std::wstring, std::wstring> VersionString;
+
+struct VersionStringTable
+{
+    Translate Encoding;
+    std::vector<VersionString> Strings;
+};
+
+struct VersionInfo
+{
+    VersionInfo() {}
+
+    VersionInfo(const HMODULE& hModule, const WORD& languageId);
+
+    std::vector<BYTE> Serialize();
+
+    bool HasFixedFileInfo() const;
+    VS_FIXEDFILEINFO& GetFixedFileInfo();
+    void SetFixedFileInfo(const VS_FIXEDFILEINFO& value);
+
+    std::vector<VersionStringTable> StringTables;
+    std::vector<Translate> SupportedTranslations;
+
+private:
+    VS_FIXEDFILEINFO m_fixedFileInfo;
+    void DeserializeVersionInfo(const BYTE* const pData, size_t size);
+};
+
 class ResourceUpdater {
  public:
   typedef std::vector<std::wstring> StringValues;
   typedef std::map<UINT,StringValues> StringTable;
   typedef std::map<WORD,StringTable> StringTableMap;
 
-  typedef std::vector<VersionStampValue> VersionStampValues;
-  typedef std::map<UINT,VersionStampValues> VersionStampTable;
-  typedef std::map<WORD,VersionStampTable> VersionStampMap;
+  typedef std::map<LANGID, VersionInfo> VersionStampMap;
+
   typedef std::map<UINT, std::unique_ptr<IconsValue>> IconTable;
 
   struct IconResInfo
   {
-      UINT MaxIconId;
-      IconTable IconBundles;
+    UINT MaxIconId;
+    IconTable IconBundles;
   };
 
   typedef std::map<LANGID, IconResInfo> IconTableMap;
@@ -114,8 +136,6 @@ class ResourceUpdater {
   static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, BYTE*& data, size_t& dataSize);
 
 private:
-  bool Deserialize(const BYTE* data, const size_t& dataSize, VersionStampValues& values);
-  bool SerializeVersionInfo(VersionStampValues& values, std::vector<char>& out);
   bool SerializeStringTable(const StringValues& values, const UINT& blockId, std::vector<char>& out);
 
   // not thread-safe
