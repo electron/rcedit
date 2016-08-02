@@ -111,10 +111,10 @@ class ResourceUpdater {
   bool Commit();
 
   static bool UpdateRaw(const WCHAR* filename, const WORD& languageId, const WCHAR* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
-  static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, void*& data, size_t& dataSize);
+  static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, BYTE*& data, size_t& dataSize);
 
 private:
-  bool Deserialize(const void* data, const size_t& dataSize, VersionStampValues& values);
+  bool Deserialize(const BYTE* data, const size_t& dataSize, VersionStampValues& values);
   bool SerializeVersionInfo(VersionStampValues& values, std::vector<char>& out);
   bool SerializeStringTable(const StringValues& values, const UINT& blockId, std::vector<char>& out);
 

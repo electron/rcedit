@@ -124,7 +124,7 @@ bool ResourceUpdater::Load(const WCHAR* filename) {
 
   for (VersionStampMap::iterator i = versionStampMap.begin(); i != versionStampMap.end(); i++) {
     for (VersionStampTable::iterator j = i->second.begin(); j != i->second.end(); j++) {
-      void* data = NULL;
+      BYTE* data = NULL;
       size_t dataSize = 0;
       if (!GetResourcePointer(hModule, i->first, j->first, RT_VERSION, data, dataSize)) {
         return false;
@@ -447,7 +447,7 @@ bool ResourceUpdater::Commit() {
   return ru.Commit();
 }
 
-bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, void*& data, size_t& dataSize) {
+bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, BYTE*& data, size_t& dataSize) {
   if (!IS_INTRESOURCE(id)) {
     return false;
   }
@@ -474,7 +474,7 @@ bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& lan
   }
 
   dataSize = static_cast<size_t>(size);
-  data = p;
+  data = static_cast<BYTE*>(p);
   return true;
 }
 
@@ -500,8 +500,8 @@ bool ResourceUpdater::UpdateRaw
   }
 }
 
-bool ResourceUpdater::Deserialize(const void* data, const size_t& dataSize, VersionStampValues& values) {
-  unsigned char* pTop = reinterpret_cast<unsigned char*>(const_cast<void*>(data));
+bool ResourceUpdater::Deserialize(const BYTE* data, const size_t& dataSize, VersionStampValues& values) {
+  unsigned char* pTop = reinterpret_cast<unsigned char*>(const_cast<BYTE*>(data));
 
   // 4 byte alignment
   for (unsigned short i = 0; i < dataSize;) {
