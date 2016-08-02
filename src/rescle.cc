@@ -69,7 +69,7 @@ typedef struct _VS_VERSION_ROOT {
 #pragma pack(pop)
 
 struct Translate {
-  WORD wLanguage;
+  LANGID wLanguage;
   WORD wCodePage;
 };
 
