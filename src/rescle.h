@@ -21,6 +21,7 @@
 #include <map>
 
 #include <windows.h>
+#include <memory> // unique_ptr
 
 #define RU_VS_COMMENTS          L"Comments"
 #define RU_VS_COMPANY_NAME      L"CompanyName"
@@ -82,6 +83,15 @@ class ResourceUpdater {
   typedef std::vector<VersionStampValue> VersionStampValues;
   typedef std::map<UINT,VersionStampValues> VersionStampTable;
   typedef std::map<WORD,VersionStampTable> VersionStampMap;
+  typedef std::map<UINT, std::unique_ptr<IconsValue>> IconTable;
+
+  struct IconResInfo
+  {
+      UINT MaxIconId;
+      IconTable IconBundles;
+  };
+
+  typedef std::map<LANGID, IconResInfo> IconTableMap;
 
   ResourceUpdater();
   ~ResourceUpdater();
@@ -95,6 +105,8 @@ class ResourceUpdater {
   bool SetFileVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
   bool ChangeString(const WORD& languageId, const UINT& id, const WCHAR* value);
   bool ChangeString(const UINT& id, const WCHAR* value);
+  bool SetIcon(const WCHAR* path, const LANGID& langId, const UINT& iconBundle);
+  bool SetIcon(const WCHAR* path, const LANGID& langId);
   bool SetIcon(const WCHAR* path);
   bool Commit();
 
@@ -116,7 +128,9 @@ private:
   std::wstring filename;
   VersionStampMap versionStampMap;
   StringTableMap stringTableMap;
-  IconsValue icon;
+  IconTableMap iconBundleMap;
+
+  unsigned short IconCount;
 };
 
 class ScopedResourceUpdater {

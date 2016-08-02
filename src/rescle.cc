@@ -119,6 +119,8 @@ bool ResourceUpdater::Load(const WCHAR* filename) {
 
   EnumResourceNamesW(hModule, RT_STRING, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
   EnumResourceNamesW(hModule, RT_VERSION, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
+  EnumResourceNamesW(hModule, RT_GROUP_ICON, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
+  EnumResourceNamesW(hModule, RT_ICON, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
 
   for (VersionStampMap::iterator i = versionStampMap.begin(); i != versionStampMap.end(); i++) {
     for (VersionStampTable::iterator j = i->second.begin(); j != i->second.end(); j++) {
@@ -269,7 +271,13 @@ bool ResourceUpdater::ChangeString(const UINT& id, const WCHAR* value) {
   }
 }
 
-bool ResourceUpdater::SetIcon(const WCHAR* path) {
+bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId, const UINT& iconBundle)
+{
+  auto& pIcon = iconBundleMap[langId].IconBundles[iconBundle];
+  if (pIcon == nullptr)
+    pIcon = std::make_unique<IconsValue>();
+
+  auto& icon = *pIcon;
   DWORD bytes;
 
   ScopedFile file(path);
@@ -315,6 +323,17 @@ bool ResourceUpdater::SetIcon(const WCHAR* path) {
   }
 
   return true;
+}
+
+bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId)
+{
+  auto& iconBundle = iconBundleMap[langId].IconBundles.begin()->first;
+  return SetIcon(path, langId, iconBundle);
+}
+
+bool ResourceUpdater::SetIcon(const WCHAR* path) {
+  auto& langId = iconBundleMap.begin()->first;
+  return SetIcon(path, langId);
 }
 
 bool ResourceUpdater::Commit() {
@@ -371,29 +390,56 @@ bool ResourceUpdater::Commit() {
     }
   }
 
-  // update icon.
-  if (icon.grpHeader.size() > 0) {
-    if (!UpdateResourceW
-      (ru.Get()
-      , RT_GROUP_ICON
-      , MAKEINTRESOURCEW(1)
-      , MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
-      , icon.grpHeader.data()
-      , icon.grpHeader.size())) {
+  for (auto iLangIconInfoPair = iconBundleMap.begin(); iLangIconInfoPair != iconBundleMap.end(); ++iLangIconInfoPair)
+  {
+    auto& langId = iLangIconInfoPair->first;
+    auto& maxIconId = iLangIconInfoPair->second.MaxIconId;
+    for (auto iNameBundlePair = iLangIconInfoPair->second.IconBundles.begin(); iNameBundlePair != iLangIconInfoPair->second.IconBundles.end(); ++iNameBundlePair)
+    {
+      auto& bundleId = iNameBundlePair->first;
+      auto& pIcon = iNameBundlePair->second;
+      if (pIcon == nullptr)
+        continue;
 
-      return false;
-    }
+      auto& icon = *pIcon;
+      // update icon.
+      if (icon.grpHeader.size() > 0) {
+        if (!UpdateResourceW
+          (ru.Get()
+            , RT_GROUP_ICON
+            , MAKEINTRESOURCEW(bundleId)
+            , langId
+            , icon.grpHeader.data()
+            , icon.grpHeader.size())) {
 
-    for (size_t i = 0; i < icon.header.count; ++i) {
-      if (!UpdateResourceW
-        (ru.Get()
-        , RT_ICON
-        , MAKEINTRESOURCEW(i + 1)
-        , MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
-        , icon.images[i].data()
-        , icon.images[i].size())) {
+          return false;
+        }
 
-        return false;
+        for (size_t i = 0; i < icon.header.count; ++i) {
+          if (!UpdateResourceW
+            (ru.Get()
+              , RT_ICON
+              , MAKEINTRESOURCEW(i + 1)
+              , langId
+              , icon.images[i].data()
+              , icon.images[i].size())) {
+
+            return false;
+          }
+        }
+
+        for (size_t i = icon.header.count; i < maxIconId - 1; ++i) {
+          if (!UpdateResourceW
+            (ru.Get()
+              , RT_ICON
+              , MAKEINTRESOURCEW(i + 1)
+              , langId
+              , nullptr
+              , 0)) {
+
+            return false;
+          }
+        }
       }
     }
   }
@@ -596,10 +642,19 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
     UINT type1 = reinterpret_cast<UINT>(lpszType);
     UINT type2 = reinterpret_cast<UINT>(RT_VERSION);
     UINT type3 = reinterpret_cast<UINT>(RT_STRING);
+    UINT type4 = reinterpret_cast<UINT>(RT_ICON);
+    UINT type5 = reinterpret_cast<UINT>(RT_GROUP_ICON);
     if (type1 == type2) {
       instance->versionStampMap[ wIDLanguage ][ reinterpret_cast<UINT>(lpszName) ].resize(0);
     } else if (type1 == type3) {
       instance->stringTableMap[ wIDLanguage ][ reinterpret_cast<UINT>(lpszName) - 1 ].resize(0);
+    } else if (type1 == type4) {
+      auto iconId = reinterpret_cast<UINT>(lpszName);
+      auto& maxIconId = instance->iconBundleMap[wIDLanguage].MaxIconId;
+      if (iconId > maxIconId)
+        maxIconId = iconId;
+    } else if (type1 == type5) {
+      instance->iconBundleMap[wIDLanguage].IconBundles[reinterpret_cast<UINT>(lpszName)] = nullptr;
     }
   }
   return TRUE;
