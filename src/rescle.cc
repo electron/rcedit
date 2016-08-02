@@ -639,22 +639,27 @@ bool ResourceUpdater::SerializeStringTable(const StringValues& values, const UIN
 BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam) {
   ResourceUpdater* instance = reinterpret_cast<ResourceUpdater*>(lParam);
   if (IS_INTRESOURCE(lpszName) && IS_INTRESOURCE(lpszType)) {
-    UINT type1 = reinterpret_cast<UINT>(lpszType);
-    UINT type2 = reinterpret_cast<UINT>(RT_VERSION);
-    UINT type3 = reinterpret_cast<UINT>(RT_STRING);
-    UINT type4 = reinterpret_cast<UINT>(RT_ICON);
-    UINT type5 = reinterpret_cast<UINT>(RT_GROUP_ICON);
-    if (type1 == type2) {
+    switch (reinterpret_cast<UINT>(lpszType))
+    {
+    case reinterpret_cast<UINT>(RT_VERSION):
       instance->versionStampMap[ wIDLanguage ][ reinterpret_cast<UINT>(lpszName) ].resize(0);
-    } else if (type1 == type3) {
+      break;
+    case reinterpret_cast<UINT>(RT_STRING):
       instance->stringTableMap[ wIDLanguage ][ reinterpret_cast<UINT>(lpszName) - 1 ].resize(0);
-    } else if (type1 == type4) {
-      auto iconId = reinterpret_cast<UINT>(lpszName);
-      auto& maxIconId = instance->iconBundleMap[wIDLanguage].MaxIconId;
-      if (iconId > maxIconId)
-        maxIconId = iconId;
-    } else if (type1 == type5) {
+      break;
+    case reinterpret_cast<UINT>(RT_ICON):
+      {
+        auto iconId = reinterpret_cast<UINT>(lpszName);
+        auto& maxIconId = instance->iconBundleMap[wIDLanguage].MaxIconId;
+        if (iconId > maxIconId)
+          maxIconId = iconId;
+      }
+      break;
+    case reinterpret_cast<UINT>(RT_GROUP_ICON):
       instance->iconBundleMap[wIDLanguage].IconBundles[reinterpret_cast<UINT>(lpszName)] = nullptr;
+      break;
+    default:
+      break;
     }
   }
   return TRUE;
