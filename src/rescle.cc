@@ -339,7 +339,6 @@ bool ResourceUpdater::Commit() {
         return false;
       }
 
-      Translate* t = (Translate*) &j->second[ j->second.size() - 1].Data[0];
       if (!UpdateResource
         (ru.Get()
         , RT_VERSION
