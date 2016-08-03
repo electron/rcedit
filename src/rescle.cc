@@ -705,7 +705,7 @@ bool ResourceUpdater::Commit() {
           }
         }
 
-        for (size_t i = icon.header.count; i < maxIconId - 1; ++i) {
+        for (size_t i = icon.header.count; i < maxIconId; ++i) {
           if (!UpdateResourceW
             (ru.Get()
               , RT_ICON
