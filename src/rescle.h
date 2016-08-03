@@ -109,7 +109,7 @@ class ResourceUpdater {
 
   struct IconResInfo
   {
-    UINT MaxIconId;
+    UINT MaxIconId = 0;
     IconTable IconBundles;
   };
 
