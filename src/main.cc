@@ -65,7 +65,7 @@ int wmain(int argc, const wchar_t* argv[]) {
         return print_error("Unable to parse version string");
 
       if (!updater.SetProductVersion(v1, v2, v3, v4))
-        return print_error("Unable to change file version");
+        return print_error("Unable to change product version");
 
       if (!updater.SetVersionString(L"ProductVersion", argv[i]))
         return print_error("Unable to change ProductVersion string");
