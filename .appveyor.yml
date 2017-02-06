@@ -1,0 +1,14 @@
+image:
+- Visual Studio 2015
+- Visual Studio 2013
+configuration: Default
+before_build:
+- cmd: |
+        git clone https://chromium.googlesource.com/external/gyp
+        gyp\gyp rcedit.gyp --depth .
+build:
+  project: rcedit.sln
+  parallel: true
+  verbosity: detailed
+artifacts:
+- path: Default\rcedit.exe
