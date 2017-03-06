@@ -11,6 +11,8 @@
 #include <atlstr.h>
 #include <sstream> // wstringstream
 #include <iomanip> // setw, setfill
+#include <iostream>
+#include <string>
 
 namespace rescle {
 
@@ -438,7 +440,14 @@ bool ResourceUpdater::Load(const WCHAR* filename) {
   EnumResourceNamesW(hModule, RT_VERSION, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
   EnumResourceNamesW(hModule, RT_GROUP_ICON, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
   EnumResourceNamesW(hModule, RT_ICON, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
+  EnumResourceNamesW(hModule, RT_MANIFEST, OnEnumResourceManifest, reinterpret_cast<LONG_PTR>(this));
 
+  return true;
+}
+
+bool ResourceUpdater::SetExecutionLevel(const WCHAR* value) {
+  std::wstring ws(value);
+  executionLevel = std::wstring(ws.begin(), ws.end());
   return true;
 }
 
@@ -642,6 +651,35 @@ bool ResourceUpdater::Commit() {
       , MAKEINTRESOURCEW(1)
       , langId
       , &out[0], static_cast<DWORD>(out.size()))) {
+
+      return false;
+    }
+  }
+
+  // update the execution level
+  if (!executionLevel.empty())
+  {
+    // string replace with requested executionLevel
+    std::wstring::size_type pos = 0u;
+    while ((pos = manifestString.find(original_executionLevel, pos)) != std::string::npos) {
+      manifestString.replace(pos, original_executionLevel.length(), executionLevel);
+      pos += executionLevel.length();
+    }
+
+    //std::wstring wstr(manifestString.begin(), manifestString.end());
+
+    std::vector<char> stringSection;
+    stringSection.clear();
+    stringSection.push_back(manifestString.size());
+    stringSection.insert(stringSection.end(), manifestString.begin(), manifestString.end());
+    
+    // not sure why I need to add +1 here, but it looks like the first character is the length.
+    if (!UpdateResourceW
+    (ru.Get()
+      , RT_MANIFEST
+      , MAKEINTRESOURCEW(1)
+      , 1033
+      , &stringSection.at(0) + 1, sizeof(char) * manifestString.size())) {
 
       return false;
     }
@@ -857,6 +895,33 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
 BOOL CALLBACK ResourceUpdater::OnEnumResourceName(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam) {
   EnumResourceLanguagesW(hModule, lpszType, lpszName, (ENUMRESLANGPROCW) OnEnumResourceLanguage, lParam);
   return TRUE;
+}
+
+// courtesy of http://stackoverflow.com/questions/420852/reading-an-applications-manifest-file
+BOOL CALLBACK ResourceUpdater::OnEnumResourceManifest(HMODULE hModule, LPCTSTR lpType,
+  LPWSTR lpName, LONG_PTR lParam)
+{
+  ResourceUpdater* instance = reinterpret_cast<ResourceUpdater*>(lParam);
+  HRSRC hResInfo = FindResource(hModule, lpName, lpType);
+  DWORD cbResource = SizeofResource(hModule, hResInfo);
+
+  HGLOBAL hResData = LoadResource(hModule, hResInfo);
+  const BYTE *pResource = (const BYTE *)LockResource(hResData);
+
+  int len = strlen(reinterpret_cast<const char*>(pResource));
+  std::wstring manifestStringLocal(pResource, pResource + len);
+  size_t found = manifestStringLocal.find(L"requestedExecutionLevel");
+  size_t end = manifestStringLocal.find(L"uiAccess");
+
+  instance->original_executionLevel = manifestStringLocal.substr(found +31 , end - found - 33);
+
+  // also store original manifestString
+  instance->manifestString = manifestStringLocal;
+
+  UnlockResource(hResData);
+  FreeResource(hResData);
+
+  return TRUE;   // Keep going
 }
 
 ScopedResourceUpdater::ScopedResourceUpdater(const wchar_t* filename, const bool& deleteOld)
