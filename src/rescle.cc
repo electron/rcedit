@@ -666,20 +666,35 @@ bool ResourceUpdater::Commit() {
       pos += executionLevel.length();
     }
 
-    //std::wstring wstr(manifestString.begin(), manifestString.end());
+    // clean old padding and add new padding, ensuring that the size is a multiple of 4
+    std::wstring::size_type padPos = manifestString.find(L"</assembly>");
+    // trim anything after the </assembly>, 11 being the length of </assembly> (ie, remove old padding)
+    std::wstring trimmedStr = manifestString.substr(0, padPos + 11);
+    std::wstring padding = L"\n<!--Padding to make filesize even multiple of 4 X -->";
 
+    int offset = (trimmedStr.length() + padding.length()) % 4;
+    // multiple X by the number in offset
+    pos = 0u;
+    for (int posCount = 0; posCount < offset; posCount = posCount + 1)
+    {
+      if ((pos = padding.find(L"X", pos)) != std::string::npos) {
+        padding.replace(pos, 1, L"XX");
+        pos += executionLevel.length();
+      }
+    }
+
+    // convert the wchar back into char, so that it encodes correctly for Windows to read the XML.
     std::vector<char> stringSection;
     stringSection.clear();
-    stringSection.push_back(manifestString.size());
-    stringSection.insert(stringSection.end(), manifestString.begin(), manifestString.end());
+    stringSection.insert(stringSection.end(), trimmedStr.begin(), trimmedStr.end());
+    stringSection.insert(stringSection.end(), padding.begin(), padding.end());
     
-    // not sure why I need to add +1 here, but it looks like the first character is the length.
     if (!UpdateResourceW
     (ru.Get()
       , RT_MANIFEST
       , MAKEINTRESOURCEW(1)
-      , 1033
-      , &stringSection.at(0) + 1, sizeof(char) * manifestString.size())) {
+      , 1033 // this is hardcoded at 1033, ie, en-us, as that is what RT_MANIFEST default uses
+      , &stringSection.at(0), sizeof(char) * stringSection.size())) {
 
       return false;
     }
