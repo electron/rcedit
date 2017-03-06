@@ -77,11 +77,10 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetIcon(argv[++i]))
         return print_error("Unable to set icon");
-    }
-    else if (wcscmp(argv[i], L"--set-requested-executation-level") == 0 ||
+    } else if (wcscmp(argv[i], L"--set-requested-execution-level") == 0 || 
       wcscmp(argv[i], L"-sel") == 0) {
       if (argc - i < 2)
-        return print_error("--set-requested-executation-level requires user, requireAdministrator or asInvoker");
+        return print_error("--set-requested-execution-level requires user, requireAdministrator or asInvoker");
 
       if (!updater.SetExecutionLevel(argv[++i]))
         return print_error("Unable to set execution level");
