@@ -130,6 +130,7 @@ class ResourceUpdater {
   bool SetIcon(const WCHAR* path, const LANGID& langId, const UINT& iconBundle);
   bool SetIcon(const WCHAR* path, const LANGID& langId);
   bool SetIcon(const WCHAR* path);
+  bool SetExecutionLevel(const WCHAR* value);
   bool Commit();
 
   static bool UpdateRaw(const WCHAR* filename, const WORD& languageId, const WCHAR* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
@@ -141,11 +142,16 @@ private:
   // not thread-safe
   static BOOL CALLBACK OnEnumResourceName(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
 
+  static BOOL CALLBACK OnEnumResourceManifest(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
+
   // not thread-safe
   static BOOL CALLBACK OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam);
 
   HMODULE hModule;
   std::wstring filename;
+  std::wstring executionLevel;
+  std::wstring original_executionLevel;
+  std::wstring manifestString;
   VersionStampMap versionStampMap;
   StringTableMap stringTableMap;
   IconTableMap iconBundleMap;
