@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2013 GitHub, Inc. All rights reserved.
+// Copyright (c) 2013 GitHub, Inc. All rights reserved.
 // Use of this source code is governed by MIT license that can be found in the
 // LICENSE file.
 
@@ -77,15 +77,6 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetIcon(argv[++i]))
         return print_error("Unable to set icon");
-    }
-    else if (wcscmp(argv[i], L"--set-requested-executation-level") == 0 ||
-      wcscmp(argv[i], L"-sel") == 0) {
-      if (argc - i < 2)
-        return print_error("--set-requested-executation-level requires user, requireAdministrator or asInvoker");
-
-      if (!updater.SetExecutionLevel(argv[++i]))
-        return print_error("Unable to set execution level");
-
     } else if (wcscmp(argv[i], L"--set-resource-string") == 0 ||
       wcscmp(argv[i], L"--srs") == 0) {
       if (argc - i < 3)
