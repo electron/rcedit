@@ -1,4 +1,4 @@
-# rcedit [![Build status](https://ci.appveyor.com/api/projects/status/q0vyl3f9a387x9p6/branch/master?svg=true)](https://ci.appveyor.com/project/Atom/rcedit/branch/master)
+# rcedit [![Build status](https://ci.appveyor.com/api/projects/status/o8d047nebu8j94v3/branch/master?svg=true)](https://ci.appveyor.com/project/electron-bot/rcedit/branch/master)
 
 Command line tool to edit resources of exe file on Windows
 
