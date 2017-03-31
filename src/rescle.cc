@@ -1,4 +1,4 @@
-// Copyright (c) 2013 GitHub, Inc. All rights reserved.
+﻿// Copyright (c) 2013 GitHub, Inc. All rights reserved.
 // Use of this source code is governed by MIT license that can be found in the
 // LICENSE file.
 //
@@ -13,6 +13,8 @@
 #include <iomanip> // setw, setfill
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <codecvt>
 
 namespace rescle {
 
@@ -451,6 +453,13 @@ bool ResourceUpdater::SetExecutionLevel(const WCHAR* value) {
   return true;
 }
 
+bool ResourceUpdater::SetApplicationManifest(const WCHAR* value) {
+  std::wstring ws(value);
+  applicationManifestPath = std::wstring(ws.begin(), ws.end());
+  return true;
+}
+
+
 bool ResourceUpdater::SetVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
@@ -627,6 +636,15 @@ bool ResourceUpdater::SetIcon(const WCHAR* path) {
   return SetIcon(path, langId);
 }
 
+std::wstring readFile(const wchar_t* filename)
+{
+  std::wifstream wif(filename);
+  wif.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
+  std::wstringstream wss;
+  wss << wif.rdbuf();
+  return wss.str();
+}
+
 bool ResourceUpdater::Commit() {
   if (hModule == NULL) {
     return false;
@@ -689,6 +707,45 @@ bool ResourceUpdater::Commit() {
     stringSection.insert(stringSection.end(), trimmedStr.begin(), trimmedStr.end());
     stringSection.insert(stringSection.end(), padding.begin(), padding.end());
     
+    if (!UpdateResourceW
+    (ru.Get()
+      , RT_MANIFEST
+      , MAKEINTRESOURCEW(1)
+      , 1033 // this is hardcoded at 1033, ie, en-us, as that is what RT_MANIFEST default uses
+      , &stringSection.at(0), sizeof(char) * stringSection.size())) {
+
+      return false;
+    }
+  }
+
+  // load file contents and replace the manifest
+  if (!applicationManifestPath.empty())
+  {
+    std::wstring fileContents = readFile(applicationManifestPath.c_str());
+
+    // clean old padding and add new padding, ensuring that the size is a multiple of 4
+    std::wstring::size_type padPos = fileContents.find(L"</assembly>");
+    // trim anything after the </assembly>, 11 being the length of </assembly> (ie, remove old padding)
+    std::wstring trimmedStr = fileContents.substr(0, padPos + 11);
+    std::wstring padding = L"\n<!--Padding to make filesize even multiple of 4 X -->";
+
+    int offset = (trimmedStr.length() + padding.length()) % 4;
+    // multiple X by the number in offset
+    std::wstring::size_type pos = 0u;
+    for (int posCount = 0; posCount < offset; posCount = posCount + 1)
+    {
+      if ((pos = padding.find(L"X", pos)) != std::string::npos) {
+        padding.replace(pos, 1, L"XX");
+        pos += executionLevel.length();
+      }
+    }
+
+    // convert the wchar back into char, so that it encodes correctly for Windows to read the XML.
+    std::vector<char> stringSection;
+    stringSection.clear();
+    stringSection.insert(stringSection.end(), fileContents.begin(), fileContents.end());
+    stringSection.insert(stringSection.end(), padding.begin(), padding.end());
+
     if (!UpdateResourceW
     (ru.Get()
       , RT_MANIFEST
