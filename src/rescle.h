@@ -1,4 +1,4 @@
-// Copyright (c) 2013 GitHub, Inc. All rights reserved.
+﻿// Copyright (c) 2013 GitHub, Inc. All rights reserved.
 // Use of this source code is governed by MIT license that can be found in the
 // LICENSE file.
 //
@@ -131,6 +131,7 @@ class ResourceUpdater {
   bool SetIcon(const WCHAR* path, const LANGID& langId);
   bool SetIcon(const WCHAR* path);
   bool SetExecutionLevel(const WCHAR* value);
+  bool SetApplicationManifest(const WCHAR* value);
   bool Commit();
 
   static bool UpdateRaw(const WCHAR* filename, const WORD& languageId, const WCHAR* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
@@ -150,6 +151,7 @@ private:
   HMODULE hModule;
   std::wstring filename;
   std::wstring executionLevel;
+  std::wstring applicationManifestPath;
   std::wstring original_executionLevel;
   std::wstring manifestString;
   VersionStampMap versionStampMap;
