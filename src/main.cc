@@ -82,14 +82,14 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetIcon(argv[++i]))
         return print_error("Unable to set icon");
-    } else if (wcscmp(argv[i], L"--set-requestedExecutionLevel") == 0 || 
+    } else if (wcscmp(argv[i], L"--set-requested-execution-level") == 0 || 
       wcscmp(argv[i], L"-sel") == 0) {
       if (argc - i < 2)
-        return print_error("--set-requestedExecutionLevel requires asInvoker, highestAvailable or requireAdministrator");
+        return print_error("--set-requested-execution-level requires asInvoker, highestAvailable or requireAdministrator");
 
       if (updater.IsApplicationManifestSet())
       {
-        print_warning("--set-requestedExecutionLevel is ignored if --application-manifest is set");
+        print_warning("--set-requested-execution-level is ignored if --application-manifest is set");
       }
 
       if (!updater.SetExecutionLevel(argv[++i]))
@@ -101,7 +101,7 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (updater.IsExecutionLevelSet())
       {
-        print_warning("--set-requestedExecutionLevel is ignored if --application-manifest is set");
+        print_warning("--set-requested-execution-level is ignored if --application-manifest is set");
       }
 
       if (!updater.SetApplicationManifest(argv[++i]))
