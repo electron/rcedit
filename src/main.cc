@@ -11,6 +11,11 @@ bool print_error(const char* message) {
   return 1;
 }
 
+bool print_warning(const char* message) {
+  fprintf(stderr, "Warning: %s\n", message);
+  return 1;
+}
+
 bool parse_version_string(const wchar_t* str, unsigned short *v1, unsigned short *v2, unsigned short *v3, unsigned short *v4) {
   *v1 = *v2 = *v3 = *v4 = 0;
   if (swscanf_s(str, L"%hu.%hu.%hu.%hu", v1, v2, v3, v4) == 4)
@@ -82,12 +87,22 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (argc - i < 2)
         return print_error("--set-requestedExecutionLevel requires asInvoker, highestAvailable or requireAdministrator");
 
+      if (updater.IsApplicationManifestSet())
+      {
+        print_warning("--set-requestedExecutionLevel is ignored if --application-manifest is set");
+      }
+
       if (!updater.SetExecutionLevel(argv[++i]))
         return print_error("Unable to set execution level");
     } else if (wcscmp(argv[i], L"--application-manifest") == 0 ||
       wcscmp(argv[i], L"-am") == 0) {
       if (argc - i < 2)
         return print_error("--application-manifest requires local path");
+
+      if (updater.IsExecutionLevelSet())
+      {
+        print_warning("--set-requestedExecutionLevel is ignored if --application-manifest is set");
+      }
 
       if (!updater.SetApplicationManifest(argv[++i]))
         return print_error("Unable to set application manifest");

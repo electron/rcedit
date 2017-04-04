@@ -11,8 +11,6 @@
 #include <atlstr.h>
 #include <sstream> // wstringstream
 #include <iomanip> // setw, setfill
-#include <iostream>
-#include <string>
 #include <fstream>
 #include <codecvt>
 
@@ -448,17 +446,24 @@ bool ResourceUpdater::Load(const WCHAR* filename) {
 }
 
 bool ResourceUpdater::SetExecutionLevel(const WCHAR* value) {
-  std::wstring ws(value);
-  executionLevel = std::wstring(ws.begin(), ws.end());
+  executionLevel = value;
   return true;
+}
+
+bool ResourceUpdater::IsExecutionLevelSet()
+{
+  return !executionLevel.empty();
 }
 
 bool ResourceUpdater::SetApplicationManifest(const WCHAR* value) {
-  std::wstring ws(value);
-  applicationManifestPath = std::wstring(ws.begin(), ws.end());
+  applicationManifestPath = value;
   return true;
 }
 
+bool ResourceUpdater::IsApplicationManifestSet()
+{
+  return !applicationManifestPath.empty();
+}
 
 bool ResourceUpdater::SetVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
@@ -675,7 +680,7 @@ bool ResourceUpdater::Commit() {
   }
 
   // update the execution level
-  if (!executionLevel.empty())
+  if (applicationManifestPath.empty() && !executionLevel.empty())
   {
     // string replace with requested executionLevel
     std::wstring::size_type pos = 0u;

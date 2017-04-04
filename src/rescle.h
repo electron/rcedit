@@ -131,7 +131,9 @@ class ResourceUpdater {
   bool SetIcon(const WCHAR* path, const LANGID& langId);
   bool SetIcon(const WCHAR* path);
   bool SetExecutionLevel(const WCHAR* value);
+  bool IsExecutionLevelSet();
   bool SetApplicationManifest(const WCHAR* value);
+  bool IsApplicationManifestSet();
   bool Commit();
 
   static bool UpdateRaw(const WCHAR* filename, const WORD& languageId, const WCHAR* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
