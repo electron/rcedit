@@ -490,11 +490,40 @@ bool ResourceUpdater::SetVersionString(const WORD& languageId, const WCHAR* name
   return true;
 }
 
+const WCHAR* ResourceUpdater::GetVersionString(const WORD& languageId, const WCHAR* name) {
+  if (versionStampMap.find(languageId) == versionStampMap.end()) {
+    return NULL;
+  }
+
+  std::wstring nameStr(name);
+
+  auto& stringTables = versionStampMap[languageId].StringTables;
+  for (auto j = stringTables.begin(); j != stringTables.end(); ++j) {
+    auto& stringPairs = j->Strings;
+    for (auto k = stringPairs.begin(); k != stringPairs.end(); ++k) {
+      if (k->first == nameStr) {
+        return k->second.c_str();
+      }
+    }
+
+  }
+
+  return NULL;
+}
+
 bool ResourceUpdater::SetVersionString(const WCHAR* name, const WCHAR* value) {
   if (versionStampMap.size() < 1) {
     return false;
   } else {
     return SetVersionString(versionStampMap.begin()->first, name, value);
+  }
+}
+
+const WCHAR* ResourceUpdater::GetVersionString(const WCHAR* name) {
+  if (versionStampMap.size() < 1) {
+    return NULL;
+  } else {
+    return GetVersionString(versionStampMap.begin()->first, name);
   }
 }
 
