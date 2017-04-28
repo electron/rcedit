@@ -40,6 +40,12 @@ Set resource string:
 $ rcedit "path-to-exe-or-dll" --set-resource-string id_number "new string value"
 ```
 
+Set requestedExecutionLevel (asInvoker|highestAvailable|requireAdministrator) in the manifest:
+
+```bash
+$ rcedit "path-to-exe-or-dll" --set-requested-execution-level "requireAdministrator"
+```
+
 And you can change multiple things in one command:
 
 ```bash

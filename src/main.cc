@@ -1,4 +1,4 @@
-// Copyright (c) 2013 GitHub, Inc. All rights reserved.
+﻿// Copyright (c) 2013 GitHub, Inc. All rights reserved.
 // Use of this source code is governed by MIT license that can be found in the
 // LICENSE file.
 
@@ -8,6 +8,11 @@
 
 bool print_error(const char* message) {
   fprintf(stderr, "Fatal error: %s\n", message);
+  return 1;
+}
+
+bool print_warning(const char* message) {
+  fprintf(stderr, "Warning: %s\n", message);
   return 1;
 }
 
@@ -77,6 +82,31 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetIcon(argv[++i]))
         return print_error("Unable to set icon");
+    } else if (wcscmp(argv[i], L"--set-requested-execution-level") == 0 || 
+      wcscmp(argv[i], L"-sel") == 0) {
+      if (argc - i < 2)
+        return print_error("--set-requested-execution-level requires asInvoker, highestAvailable or requireAdministrator");
+
+      if (updater.IsApplicationManifestSet())
+      {
+        print_warning("--set-requested-execution-level is ignored if --application-manifest is set");
+      }
+
+      if (!updater.SetExecutionLevel(argv[++i]))
+        return print_error("Unable to set execution level");
+    } else if (wcscmp(argv[i], L"--application-manifest") == 0 ||
+      wcscmp(argv[i], L"-am") == 0) {
+      if (argc - i < 2)
+        return print_error("--application-manifest requires local path");
+
+      if (updater.IsExecutionLevelSet())
+      {
+        print_warning("--set-requested-execution-level is ignored if --application-manifest is set");
+      }
+
+      if (!updater.SetApplicationManifest(argv[++i]))
+        return print_error("Unable to set application manifest");
+
     } else if (wcscmp(argv[i], L"--set-resource-string") == 0 ||
       wcscmp(argv[i], L"--srs") == 0) {
       if (argc - i < 3)
