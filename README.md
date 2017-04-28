@@ -40,13 +40,13 @@ Set resource string:
 $ rcedit "path-to-exe-or-dll" --set-resource-string id_number "new string value"
 ```
 
-Set requested execution level (asInvoker|highestAvailable|requireAdministrator) in the manifest:
+Set [requested execution level](https://msdn.microsoft.com/en-us/library/6ad1fshk.aspx#Anchor_9) (`asInvoker` | `highestAvailable` | `requireAdministrator`) in the manifest:
 
 ```bash
 $ rcedit "path-to-exe-or-dll" --set-requested-execution-level "requireAdministrator"
 ```
 
-Set application manifest:
+Set [application manifest](https://msdn.microsoft.com/en-us/library/windows/desktop/aa374191.aspx):
 
 ```bash
 $ rcedit "path-to-exe-or-dll" --application-manifest ./path/to/manifest/file
