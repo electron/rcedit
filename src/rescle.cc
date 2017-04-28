@@ -157,7 +157,7 @@ std::vector<BYTE> VersionInfo::Serialize()
   {
     auto size = sizeof(VS_FIXEDFILEINFO);
     versionInfo.wValueLength = size;
-    
+
     auto& dst = versionInfo.Value;
     dst.resize(size);
 
@@ -200,7 +200,7 @@ std::vector<BYTE> VersionInfo::Serialize()
         dst.resize(size);
 
         auto src = stringValue.c_str();
-        
+
         memcpy(&dst[0], src, size);
 
         stringTableRaw.Children.push_back(std::move(stringRaw));
@@ -211,7 +211,7 @@ std::vector<BYTE> VersionInfo::Serialize()
 
     versionInfo.Children.push_back(std::move(stringFileInfo));
   }
-  
+
   {
     VersionStampValue varFileInfo;
     varFileInfo.szKey = L"VarFileInfo";
@@ -711,7 +711,7 @@ bool ResourceUpdater::Commit() {
     stringSection.clear();
     stringSection.insert(stringSection.end(), trimmedStr.begin(), trimmedStr.end());
     stringSection.insert(stringSection.end(), padding.begin(), padding.end());
-    
+
     if (!UpdateResourceW
     (ru.Get()
       , RT_MANIFEST
