@@ -2,6 +2,9 @@
 
 Command line tool to edit resources of exe file on Windows
 
+Requires `Microsoft Visual C++ Redistributable Packages for Visual Studio 2013`:
+http://www.microsoft.com/en-us/download/details.aspx?id=40784
+
 ## Building
   * Make sure you have gyp is configured in your system. If not, clone gyp from https://chromium.googlesource.com/external/gyp
   * Clone the repository
