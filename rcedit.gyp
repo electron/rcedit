@@ -7,6 +7,18 @@
       },{
         'msvs_express': 0,
       }],
+      ['OS=="win" and (MSVS_VERSION =="2012e" or MSVS_VERSION=="2012")', {
+        'msbuild_toolset': 'v110_xp',
+      }],
+      ['OS=="win" and (MSVS_VERSION=="2013e" or MSVS_VERSION=="2013")', {
+        'msbuild_toolset': 'v120_xp',
+      }],
+      ['OS=="win" and (MSVS_VERSION=="2015")', {
+        'msbuild_toolset': 'v140_xp',
+      }],
+      ['OS=="win" and (MSVS_VERSION=="2017")', {
+        'msbuild_toolset': 'v141_xp',
+      }],
     ],
   },
   'targets': [
@@ -30,6 +42,9 @@
         },
       },
       'conditions': [
+        ['OS=="win" and "<(msbuild_toolset)"!=""', {
+          'msbuild_toolset': '<(msbuild_toolset)',
+        }],
         # Using Visual Studio Express.
         ['msvs_express==1', {
           'defines!': [
