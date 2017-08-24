@@ -18,16 +18,10 @@ bool print_warning(const char* message) {
 
 bool parse_version_string(const wchar_t* str, unsigned short *v1, unsigned short *v2, unsigned short *v3, unsigned short *v4) {
   *v1 = *v2 = *v3 = *v4 = 0;
-  if (swscanf_s(str, L"%hu.%hu.%hu.%hu", v1, v2, v3, v4) == 4)
-    return true;
-  if (swscanf_s(str, L"%hu.%hu.%hu", v1, v2, v3) == 3)
-    return true;
-  if (swscanf_s(str, L"%hu.%hu", v1, v2) == 2)
-    return true;
-  if (swscanf_s(str, L"%hu", v1) == 1)
-    return true;
-
-  return false;
+  return (swscanf_s(str, L"%hu.%hu.%hu.%hu", v1, v2, v3, v4) == 4) ||
+         (swscanf_s(str, L"%hu.%hu.%hu", v1, v2, v3) == 3) ||
+         (swscanf_s(str, L"%hu.%hu", v1, v2) == 2) ||
+         (swscanf_s(str, L"%hu", v1) == 1);
 }
 
 int wmain(int argc, const wchar_t* argv[]) {
