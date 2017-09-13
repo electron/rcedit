@@ -72,8 +72,8 @@ typedef struct _VS_VERSION_ROOT {
 } VS_VERSION_ROOT;
 #pragma pack(pop)
 
-inline unsigned int round(const unsigned int& value,
-                          const unsigned int& modula = 4) {
+template<typename T>
+inline T round(T value, int modula = 4) {
   return value + ((value % modula > 0) ? (modula - value % modula) : 0);
 }
 
@@ -244,17 +244,17 @@ std::vector<BYTE> VersionInfo::Serialize() const {
   return std::move(versionInfo.Serialize());
 }
 
-void VersionInfo::DeserializeVersionInfo(const BYTE* const pData, size_t size) {
-  const auto pVersionInfo = reinterpret_cast<const VS_VERSION_ROOT* const>(pData);
-  const auto& fixedFileInfoSize = pVersionInfo->Header.wValueLength;
+void VersionInfo::DeserializeVersionInfo(const BYTE* pData, size_t size) {
+  auto pVersionInfo = reinterpret_cast<const VS_VERSION_ROOT*>(pData);
+  WORD fixedFileInfoSize = pVersionInfo->Header.wValueLength;
 
   if (fixedFileInfoSize > 0)
     SetFixedFileInfo(pVersionInfo->Info.Info);
 
-  const auto fixedFileInfoEndOffset = reinterpret_cast<const BYTE* const>(&pVersionInfo->Info.szKey) + (wcslen(pVersionInfo->Info.szKey) + 1) * sizeof(WCHAR) + fixedFileInfoSize;
-  const auto pVersionInfoChildren = reinterpret_cast<const BYTE* const>(round(reinterpret_cast<unsigned int>(fixedFileInfoEndOffset)));
-  const auto versionInfoChildrenOffset = pVersionInfoChildren - pData;
-  const auto versionInfoChildrenSize = pVersionInfo->Header.wLength - versionInfoChildrenOffset;
+  const BYTE* fixedFileInfoEndOffset = reinterpret_cast<const BYTE*>(&pVersionInfo->Info.szKey) + (wcslen(pVersionInfo->Info.szKey) + 1) * sizeof(WCHAR) + fixedFileInfoSize;
+  const BYTE* pVersionInfoChildren = reinterpret_cast<const BYTE*>(round(reinterpret_cast<ptrdiff_t>(fixedFileInfoEndOffset)));
+  size_t versionInfoChildrenOffset = pVersionInfoChildren - pData;
+  size_t versionInfoChildrenSize = pVersionInfo->Header.wLength - versionInfoChildrenOffset;
 
   const auto childrenEndOffset = pVersionInfoChildren + versionInfoChildrenSize;
   const auto resourceEndOffset = pData + size;
@@ -792,18 +792,17 @@ bool ResourceUpdater::SerializeStringTable(const StringValues& values, UINT bloc
 BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam) {
   ResourceUpdater* instance = reinterpret_cast<ResourceUpdater*>(lParam);
   if (IS_INTRESOURCE(lpszName) && IS_INTRESOURCE(lpszType)) {
-    switch (reinterpret_cast<UINT>(lpszType)) {
-      case reinterpret_cast<UINT>(RT_VERSION): {
+    switch (reinterpret_cast<ptrdiff_t>(lpszType)) {
+      case reinterpret_cast<ptrdiff_t>(RT_VERSION): {
         try {
           instance->versionStampMap_[wIDLanguage] = VersionInfo(instance->module_, wIDLanguage);
-        }
-        catch (const std::system_error& e) {
+        } catch (const std::system_error& e) {
           return false;
         }
         break;
       }
-      case reinterpret_cast<UINT>(RT_STRING): {
-        UINT id = reinterpret_cast<UINT>(lpszName) - 1;
+      case reinterpret_cast<ptrdiff_t>(RT_STRING): {
+        UINT id = reinterpret_cast<ptrdiff_t>(lpszName) - 1;
         auto& vector = instance->stringTableMap_[wIDLanguage][id];
         for (size_t k = 0; k < 16; k++) {
           CStringW buf;
@@ -813,15 +812,16 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
         }
         break;
       }
-      case reinterpret_cast<UINT>(RT_ICON): {
-        auto iconId = reinterpret_cast<UINT>(lpszName);
+      case reinterpret_cast<ptrdiff_t>(RT_ICON): {
+        UINT iconId = reinterpret_cast<ptrdiff_t>(lpszName);
         UINT maxIconId = instance->iconBundleMap_[wIDLanguage].maxIconId;
         if (iconId > maxIconId)
           maxIconId = iconId;
         break;
       }
-      case reinterpret_cast<UINT>(RT_GROUP_ICON): {
-        instance->iconBundleMap_[wIDLanguage].iconBundles[reinterpret_cast<UINT>(lpszName)] = nullptr;
+      case reinterpret_cast<ptrdiff_t>(RT_GROUP_ICON): {
+        UINT iconId = reinterpret_cast<ptrdiff_t>(lpszName);
+        instance->iconBundleMap_[wIDLanguage].iconBundles[iconId] = nullptr;
         break;
       }
       default:
