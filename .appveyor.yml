@@ -6,7 +6,7 @@ configuration: Default
 
 platform:
 - x64
-- x86
+- Win32
 
 before_build:
 - cmd: |
