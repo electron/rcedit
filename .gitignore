@@ -5,3 +5,5 @@ ipch/
 *.sdf
 *.opensdf
 *.suo
+*.VC.db
+*.VC.VC.opendb
