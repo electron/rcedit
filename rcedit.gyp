@@ -27,6 +27,13 @@
           'msbuild_toolset': 'v141_xp',
         }],
       ],
+      'configurations': {
+        'Default': {
+        },
+        'Default_x64': {
+          'msvs_configuration_platform': 'x64',
+        },
+      }
     },
   ],
 }
