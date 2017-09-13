@@ -94,7 +94,7 @@ class VersionInfo {
  private:
   VS_FIXEDFILEINFO fixedFileInfo_;
 
-  void DeserializeVersionInfo(const BYTE* const pData, size_t size);
+  void DeserializeVersionInfo(const BYTE* pData, size_t size);
 
   VersionStringTable DeserializeVersionStringTable(const BYTE* tableData);
   void DeserializeVersionStringFileInfo(const BYTE* offset, size_t length, std::vector<VersionStringTable>& stringTables);

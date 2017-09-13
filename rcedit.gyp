@@ -1,14 +1,4 @@
 {
-  'variables': {
-    'conditions': [
-      ['OS=="win" and (MSVS_VERSION=="2015")', {
-        'msbuild_toolset': 'v140_xp',
-      }],
-      ['OS=="win" and (MSVS_VERSION=="2017")', {
-        'msbuild_toolset': 'v141_xp',
-      }],
-    ],
-  },
   'targets': [
     {
       'target_name': 'rcedit',
@@ -30,10 +20,20 @@
         },
       },
       'conditions': [
-        ['OS=="win" and "<(msbuild_toolset)"!=""', {
-          'msbuild_toolset': '<(msbuild_toolset)',
+        ['MSVS_VERSION=="2015"', {
+          'msbuild_toolset': 'v140_xp',
+        }],
+        ['MSVS_VERSION=="2017"', {
+          'msbuild_toolset': 'v141_xp',
         }],
       ],
+      'configurations': {
+        'Default': {
+        },
+        'Default_x64': {
+          'msvs_configuration_platform': 'x64',
+        },
+      }
     },
   ],
 }
