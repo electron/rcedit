@@ -63,38 +63,35 @@ class IconsValue {
   std::vector<BYTE> grpHeader;
 };
 
-struct Translate
-{
-    LANGID wLanguage;
-    WORD wCodePage;
+struct Translate {
+  LANGID wLanguage;
+  WORD wCodePage;
 };
 
 typedef std::pair<std::wstring, std::wstring> VersionString;
 
-struct VersionStringTable
-{
-    Translate Encoding;
-    std::vector<VersionString> Strings;
+struct VersionStringTable {
+  Translate Encoding;
+  std::vector<VersionString> Strings;
 };
 
-struct VersionInfo
-{
-    VersionInfo() {}
+struct VersionInfo {
+  VersionInfo() {}
 
-    VersionInfo(const HMODULE& hModule, const WORD& languageId);
+  VersionInfo(const HMODULE& hModule, const WORD& languageId);
 
-    std::vector<BYTE> Serialize();
+  std::vector<BYTE> Serialize();
 
-    bool HasFixedFileInfo() const;
-    VS_FIXEDFILEINFO& GetFixedFileInfo();
-    void SetFixedFileInfo(const VS_FIXEDFILEINFO& value);
+  bool HasFixedFileInfo() const;
+  VS_FIXEDFILEINFO& GetFixedFileInfo();
+  void SetFixedFileInfo(const VS_FIXEDFILEINFO& value);
 
-    std::vector<VersionStringTable> StringTables;
-    std::vector<Translate> SupportedTranslations;
+  std::vector<VersionStringTable> StringTables;
+  std::vector<Translate> SupportedTranslations;
 
-private:
-    VS_FIXEDFILEINFO m_fixedFileInfo;
-    void DeserializeVersionInfo(const BYTE* const pData, size_t size);
+ private:
+  VS_FIXEDFILEINFO m_fixedFileInfo;
+  void DeserializeVersionInfo(const BYTE* const pData, size_t size);
 };
 
 class ResourceUpdater {
@@ -107,8 +104,7 @@ class ResourceUpdater {
 
   typedef std::map<UINT, std::unique_ptr<IconsValue>> IconTable;
 
-  struct IconResInfo
-  {
+  struct IconResInfo {
     UINT MaxIconId = 0;
     IconTable IconBundles;
   };
@@ -141,7 +137,7 @@ class ResourceUpdater {
   static bool UpdateRaw(const WCHAR* filename, const WORD& languageId, const WCHAR* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
   static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, BYTE*& data, size_t& dataSize);
 
-private:
+ private:
   bool SerializeStringTable(const StringValues& values, const UINT& blockId, std::vector<char>& out);
 
   // not thread-safe
