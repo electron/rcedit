@@ -6,6 +6,8 @@
 
 #include "rescle.h"
 
+namespace {
+
 bool print_error(const char* message) {
   fprintf(stderr, "Fatal error: %s\n", message);
   return 1;
@@ -23,6 +25,8 @@ bool parse_version_string(const wchar_t* str, unsigned short *v1, unsigned short
          (swscanf_s(str, L"%hu.%hu", v1, v2) == 2) ||
          (swscanf_s(str, L"%hu", v1) == 1);
 }
+
+}  // namespace
 
 int wmain(int argc, const wchar_t* argv[]) {
   bool loaded = false;
@@ -88,6 +92,7 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetIcon(argv[++i]))
         return print_error("Unable to set icon");
+
     } else if (wcscmp(argv[i], L"--set-requested-execution-level") == 0 ||
       wcscmp(argv[i], L"-srel") == 0) {
       if (argc - i < 2)
@@ -100,6 +105,7 @@ int wmain(int argc, const wchar_t* argv[]) {
 
       if (!updater.SetExecutionLevel(argv[++i]))
         return print_error("Unable to set execution level");
+
     } else if (wcscmp(argv[i], L"--application-manifest") == 0 ||
       wcscmp(argv[i], L"-am") == 0) {
       if (argc - i < 2)
@@ -126,6 +132,7 @@ int wmain(int argc, const wchar_t* argv[]) {
       const wchar_t* value = argv[++i];
       if (!updater.ChangeString(key_id, value))
         return print_error("Unable to change string");
+
     } else {
       if (loaded)
         return print_error("Unexpected trailing arguments");

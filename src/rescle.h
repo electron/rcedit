@@ -38,8 +38,7 @@
 
 namespace rescle {
 
-class IconsValue {
- public:
+struct IconsValue {
   typedef struct _ICONENTRY {
     BYTE width;
     BYTE height;
@@ -63,38 +62,44 @@ class IconsValue {
   std::vector<BYTE> grpHeader;
 };
 
-struct Translate
-{
-    LANGID wLanguage;
-    WORD wCodePage;
+struct Translate {
+  LANGID wLanguage;
+  WORD wCodePage;
 };
 
 typedef std::pair<std::wstring, std::wstring> VersionString;
+typedef std::pair<const BYTE* const, const size_t> OffsetLengthPair;
 
-struct VersionStringTable
-{
-    Translate Encoding;
-    std::vector<VersionString> Strings;
+struct VersionStringTable {
+  Translate encoding;
+  std::vector<VersionString> strings;
 };
 
-struct VersionInfo
-{
-    VersionInfo() {}
+class VersionInfo {
+ public:
+  VersionInfo() {}
 
-    VersionInfo(const HMODULE& hModule, const WORD& languageId);
+  VersionInfo(HMODULE hModule, WORD languageId);
 
-    std::vector<BYTE> Serialize();
+  std::vector<BYTE> Serialize() const;
 
-    bool HasFixedFileInfo() const;
-    VS_FIXEDFILEINFO& GetFixedFileInfo();
-    void SetFixedFileInfo(const VS_FIXEDFILEINFO& value);
+  bool HasFixedFileInfo() const;
+  VS_FIXEDFILEINFO& GetFixedFileInfo();
+  const VS_FIXEDFILEINFO& GetFixedFileInfo() const;
+  void SetFixedFileInfo(const VS_FIXEDFILEINFO& value);
 
-    std::vector<VersionStringTable> StringTables;
-    std::vector<Translate> SupportedTranslations;
+  std::vector<VersionStringTable> stringTables;
+  std::vector<Translate> supportedTranslations;
 
-private:
-    VS_FIXEDFILEINFO m_fixedFileInfo;
-    void DeserializeVersionInfo(const BYTE* const pData, size_t size);
+ private:
+  VS_FIXEDFILEINFO fixedFileInfo_;
+
+  void DeserializeVersionInfo(const BYTE* const pData, size_t size);
+
+  VersionStringTable DeserializeVersionStringTable(const BYTE* tableData);
+  void DeserializeVersionStringFileInfo(const BYTE* offset, size_t length, std::vector<VersionStringTable>& stringTables);
+  void DeserializeVarFileInfo(const unsigned char* offset, std::vector<Translate>& translations);
+  OffsetLengthPair GetChildrenData(const BYTE* entryData);
 };
 
 class ResourceUpdater {
@@ -102,15 +107,12 @@ class ResourceUpdater {
   typedef std::vector<std::wstring> StringValues;
   typedef std::map<UINT,StringValues> StringTable;
   typedef std::map<WORD,StringTable> StringTableMap;
-
   typedef std::map<LANGID, VersionInfo> VersionStampMap;
-
   typedef std::map<UINT, std::unique_ptr<IconsValue>> IconTable;
 
-  struct IconResInfo
-  {
-    UINT MaxIconId = 0;
-    IconTable IconBundles;
+  struct IconResInfo {
+    UINT maxIconId = 0;
+    IconTable iconBundles;
   };
 
   typedef std::map<LANGID, IconResInfo> IconTableMap;
@@ -119,17 +121,17 @@ class ResourceUpdater {
   ~ResourceUpdater();
 
   bool Load(const WCHAR* filename);
-  bool SetVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value);
+  bool SetVersionString(WORD languageId, const WCHAR* name, const WCHAR* value);
   bool SetVersionString(const WCHAR* name, const WCHAR* value);
-  const WCHAR* GetVersionString(const WORD& languageId, const WCHAR* name);
+  const WCHAR* GetVersionString(WORD languageId, const WCHAR* name);
   const WCHAR* GetVersionString(const WCHAR* name);
-  bool SetProductVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
-  bool SetProductVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
-  bool SetFileVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
-  bool SetFileVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
-  bool ChangeString(const WORD& languageId, const UINT& id, const WCHAR* value);
-  bool ChangeString(const UINT& id, const WCHAR* value);
-  bool SetIcon(const WCHAR* path, const LANGID& langId, const UINT& iconBundle);
+  bool SetProductVersion(WORD languageId, UINT id, unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
+  bool SetProductVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
+  bool SetFileVersion(WORD languageId, UINT id, unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
+  bool SetFileVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
+  bool ChangeString(WORD languageId, UINT id, const WCHAR* value);
+  bool ChangeString(UINT id, const WCHAR* value);
+  bool SetIcon(const WCHAR* path, const LANGID& langId, UINT iconBundle);
   bool SetIcon(const WCHAR* path, const LANGID& langId);
   bool SetIcon(const WCHAR* path);
   bool SetExecutionLevel(const WCHAR* value);
@@ -138,46 +140,37 @@ class ResourceUpdater {
   bool IsApplicationManifestSet();
   bool Commit();
 
-  static bool UpdateRaw(const WCHAR* filename, const WORD& languageId, const WCHAR* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
-  static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, BYTE*& data, size_t& dataSize);
+ private:
+  bool SerializeStringTable(const StringValues& values, UINT blockId, std::vector<char>* out);
 
-private:
-  bool SerializeStringTable(const StringValues& values, const UINT& blockId, std::vector<char>& out);
-
-  // not thread-safe
   static BOOL CALLBACK OnEnumResourceName(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
-
   static BOOL CALLBACK OnEnumResourceManifest(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
-
-  // not thread-safe
   static BOOL CALLBACK OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam);
 
-  HMODULE hModule;
-  std::wstring filename;
-  std::wstring executionLevel;
-  std::wstring applicationManifestPath;
-  std::wstring original_executionLevel;
-  std::wstring manifestString;
-  VersionStampMap versionStampMap;
-  StringTableMap stringTableMap;
-  IconTableMap iconBundleMap;
-
-  unsigned short IconCount;
+  HMODULE module_;
+  std::wstring filename_;
+  std::wstring executionLevel_;
+  std::wstring originalExecutionLevel_;
+  std::wstring applicationManifestPath_;
+  std::wstring manifestString_;
+  VersionStampMap versionStampMap_;
+  StringTableMap stringTableMap_;
+  IconTableMap iconBundleMap_;
 };
 
 class ScopedResourceUpdater {
  public:
-  ScopedResourceUpdater(const WCHAR* filename, const bool& deleteOld);
+  ScopedResourceUpdater(const WCHAR* filename, bool deleteOld);
   ~ScopedResourceUpdater();
 
   HANDLE Get() const;
   bool Commit();
 
  private:
-  bool EndUpdate(const bool& doesCommit);
+  bool EndUpdate(bool doesCommit);
 
-  HANDLE handle;
-  bool commited;
+  HANDLE handle_;
+  bool commited_ = false;
 };
 
 }  // namespace rescle
