@@ -45,6 +45,18 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (!updater.SetVersionString(key, value))
         return print_error("Unable to change version string");
 
+    } else if (wcscmp(argv[i], L"--get-version-string") == 0 ||
+               wcscmp(argv[i], L"-gvs") == 0) {
+      if (argc - i < 2)
+        return print_error("--get-version-string requires 'Key'");
+      const wchar_t* key = argv[++i];
+      const wchar_t* result = updater.GetVersionString(key);
+      if (!result)
+        return print_error("Unable to get version string");
+
+      fwprintf(stdout, L"%s", result);
+      return 0;  // no changes made
+
     } else if (wcscmp(argv[i], L"--set-file-version") == 0 ||
                wcscmp(argv[i], L"-sfv") == 0) {
       if (argc - i < 2)
