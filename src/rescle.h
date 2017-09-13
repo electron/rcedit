@@ -38,8 +38,7 @@
 
 namespace rescle {
 
-class IconsValue {
- public:
+struct IconsValue {
   typedef struct _ICONENTRY {
     BYTE width;
     BYTE height;
@@ -69,13 +68,15 @@ struct Translate {
 };
 
 typedef std::pair<std::wstring, std::wstring> VersionString;
+typedef std::pair<const BYTE* const, const size_t> OffsetLengthPair;
 
 struct VersionStringTable {
   Translate Encoding;
   std::vector<VersionString> Strings;
 };
 
-struct VersionInfo {
+class VersionInfo {
+ public:
   VersionInfo() {}
 
   VersionInfo(HMODULE hModule, WORD languageId);
@@ -91,7 +92,13 @@ struct VersionInfo {
 
  private:
   VS_FIXEDFILEINFO m_fixedFileInfo;
+
   void DeserializeVersionInfo(const BYTE* const pData, size_t size);
+
+  VersionStringTable DeserializeVersionStringTable(const BYTE* tableData);
+  void DeserializeVersionStringFileInfo(const BYTE* offset, size_t length, std::vector<VersionStringTable>& stringTables);
+  void DeserializeVarFileInfo(const unsigned char* offset, std::vector<Translate>& translations);
+  OffsetLengthPair GetChildrenData(const BYTE* entryData);
 };
 
 class ResourceUpdater {
@@ -134,18 +141,11 @@ class ResourceUpdater {
   bool IsApplicationManifestSet();
   bool Commit();
 
-  static bool UpdateRaw(const WCHAR* filename, WORD languageId, const WCHAR* type, UINT id, const void* data, size_t dataSize, bool deleteOld);
-  static bool GetResourcePointer(HMODULE hModule, WORD languageId, int id, const WCHAR* type, BYTE*& data, size_t& dataSize);
-
  private:
   bool SerializeStringTable(const StringValues& values, UINT blockId, std::vector<char>& out);
 
-  // not thread-safe
   static BOOL CALLBACK OnEnumResourceName(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
-
   static BOOL CALLBACK OnEnumResourceManifest(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
-
-  // not thread-safe
   static BOOL CALLBACK OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam);
 
   HMODULE hModule;
