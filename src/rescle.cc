@@ -91,15 +91,15 @@ class ScopedFile {
 
 class VersionStampValue {
 public:
-	WORD wLength = 0; // length in bytes of struct, including children
-	WORD wValueLength = 0; // stringfileinfo, stringtable: 0; string: Value size in WORD; var: Value size in bytes
-	WORD wType = 0; // 0: binary data; 1: text data
-	std::wstring szKey; // stringtable: 8-digit hex stored as UTF-16 (hiword: hi6: sublang, lo10: majorlang; loword: code page); must include zero words to align next member on 32-bit boundary
-	std::vector<BYTE> Value; // string: zero-terminated string; var: array of language & code page ID pairs
-	std::vector<VersionStampValue> Children;
+  WORD wLength = 0; // length in bytes of struct, including children
+  WORD wValueLength = 0; // stringfileinfo, stringtable: 0; string: Value size in WORD; var: Value size in bytes
+  WORD wType = 0; // 0: binary data; 1: text data
+  std::wstring szKey; // stringtable: 8-digit hex stored as UTF-16 (hiword: hi6: sublang, lo10: majorlang; loword: code page); must include zero words to align next member on 32-bit boundary
+  std::vector<BYTE> Value; // string: zero-terminated string; var: array of language & code page ID pairs
+  std::vector<VersionStampValue> Children;
 
-	size_t GetLength();
-	std::vector<BYTE> Serialize();
+  size_t GetLength();
+  std::vector<BYTE> Serialize();
 };
 
 typedef std::pair<const BYTE* const, const size_t> OffsetLengthPair;
@@ -490,6 +490,14 @@ bool ResourceUpdater::SetVersionString(const WORD& languageId, const WCHAR* name
   return true;
 }
 
+bool ResourceUpdater::SetVersionString(const WCHAR* name, const WCHAR* value) {
+  if (versionStampMap.size() < 1) {
+    return false;
+  } else {
+    return SetVersionString(versionStampMap.begin()->first, name, value);
+  }
+}
+
 const WCHAR* ResourceUpdater::GetVersionString(const WORD& languageId, const WCHAR* name) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return NULL;
@@ -497,26 +505,17 @@ const WCHAR* ResourceUpdater::GetVersionString(const WORD& languageId, const WCH
 
   std::wstring nameStr(name);
 
-  auto& stringTables = versionStampMap[languageId].StringTables;
-  for (auto j = stringTables.begin(); j != stringTables.end(); ++j) {
-    auto& stringPairs = j->Strings;
-    for (auto k = stringPairs.begin(); k != stringPairs.end(); ++k) {
-      if (k->first == nameStr) {
-        return k->second.c_str();
+  const auto& stringTables = versionStampMap[languageId].StringTables;
+  for (const auto& j : stringTables) {
+    const auto& stringPairs = j.Strings;
+    for (const auto& k : stringPairs) {
+      if (k.first == nameStr) {
+        return k.second.c_str();
       }
     }
-
   }
 
   return NULL;
-}
-
-bool ResourceUpdater::SetVersionString(const WCHAR* name, const WCHAR* value) {
-  if (versionStampMap.size() < 1) {
-    return false;
-  } else {
-    return SetVersionString(versionStampMap.begin()->first, name, value);
-  }
 }
 
 const WCHAR* ResourceUpdater::GetVersionString(const WCHAR* name) {
@@ -968,7 +967,7 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
       }
       break;
     case reinterpret_cast<UINT>(RT_STRING):
-	  {
+    {
         UINT id = reinterpret_cast<UINT>(lpszName) - 1;
         auto& vector = instance->stringTableMap[wIDLanguage][id];
         for (size_t k = 0; k < 16; k++) {
@@ -977,7 +976,7 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
           buf.LoadStringW(instance->hModule, id * 16 + k, wIDLanguage);
           vector.push_back(buf.GetBuffer());
         }
-	  }
+    }
       break;
     case reinterpret_cast<UINT>(RT_ICON):
       {
