@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 13.00
-# Visual Studio 2013
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2015
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rcedit", "rcedit.vcxproj", "{3609DBE4-DFE6-667B-C659-D6913E25C767}"
 EndProject
 Global

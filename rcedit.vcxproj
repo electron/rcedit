@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Default|Win32">
       <Configuration>Default</Configuration>
@@ -11,20 +11,15 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>rcedit</RootNamespace>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
-    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props"/>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Default|Win32'">
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Label="Locals">
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
-  <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props"/>
   <ImportGroup Label="ExtensionSettings"/>
   <ImportGroup Label="PropertySheets">
     <Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"/>
@@ -39,6 +34,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Default|Win32'">
     <ClCompile>
+      <CompileAsWinRT>false</CompileAsWinRT>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <Optimization>Full</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -64,6 +60,5 @@
     <ResourceCompile Include="src\rcedit.rc"/>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
-  <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets"/>
   <ImportGroup Label="ExtensionTargets"/>
 </Project>
