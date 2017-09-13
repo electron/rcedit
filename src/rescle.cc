@@ -97,8 +97,7 @@ class ScopedFile {
   HANDLE file_;
 };
 
-class VersionStampValue {
- public:
+struct VersionStampValue {
   WORD valueLength = 0; // stringfileinfo, stringtable: 0; string: Value size in WORD; var: Value size in bytes
   WORD type = 0; // 0: binary data; 1: text data
   std::wstring key; // stringtable: 8-digit hex stored as UTF-16 (hiword: hi6: sublang, lo10: majorlang; loword: code page); must include zero words to align next member on 32-bit boundary
@@ -107,9 +106,6 @@ class VersionStampValue {
 
   size_t GetLength() const;
   std::vector<BYTE> Serialize() const;
-
- private:
-  mutable WORD length = 0; // length in bytes of struct, including children
 };
 
 }  // namespace
@@ -245,7 +241,7 @@ std::vector<BYTE> VersionInfo::Serialize() const {
     versionInfo.children.push_back(std::move(varFileInfo));
   }
 
-  return move(versionInfo.Serialize());
+  return std::move(versionInfo.Serialize());
 }
 
 void VersionInfo::DeserializeVersionInfo(const BYTE* const pData, size_t size) {
@@ -332,58 +328,43 @@ OffsetLengthPair VersionInfo::GetChildrenData(const BYTE* entryData) {
 }
 
 size_t VersionStampValue::GetLength() const {
-  if (length > 0)
-    return length;
-
   size_t bytes = sizeof(VS_VERSION_HEADER);
   bytes += static_cast<size_t>(key.length() + 1) * sizeof(WCHAR);
-
   if (!value.empty())
     bytes = round(bytes) + value.size();
-
-  if (!children.empty()) {
-    for (auto i = children.begin(); i != children.end(); ++i) {
-      bytes = round(bytes) + static_cast<size_t>(i->GetLength());
-    }
-  }
-
-  length = bytes;
-
+  for (const auto& child : children)
+    bytes = round(bytes) + static_cast<size_t>(child.GetLength());
   return bytes;
 }
 
 std::vector<BYTE> VersionStampValue::Serialize() const {
   std::vector<BYTE> data = std::vector<BYTE>(GetLength());
-  memset(&data[0], NULL, data.size());
 
-  size_t bytes = 0;
+  size_t offset = 0;
 
-  size_t headerSize = sizeof(VS_VERSION_HEADER);
-  memcpy(&data[bytes], this, headerSize);
-  bytes += headerSize;
+  VS_VERSION_HEADER header = { static_cast<WORD>(data.size()), valueLength, type };
+  memcpy(&data[offset], &header, sizeof(header));
+  offset += sizeof(header);
 
   auto keySize = static_cast<size_t>(key.length() + 1) * sizeof(WCHAR);
-  memcpy(&data[bytes], key.c_str(), keySize);
-  bytes += keySize;
+  memcpy(&data[offset], key.c_str(), keySize);
+  offset += keySize;
 
   if (!value.empty()) {
-    bytes = round(bytes);
-    auto valueSize = value.size();
-    memcpy(&data[bytes], &value[0], valueSize);
-    bytes += valueSize;
+    offset = round(offset);
+    memcpy(&data[offset], &value[0], value.size());
+    offset += value.size();
   }
 
-  if (!children.empty()) {
-    for (auto i = children.begin(); i != children.end(); ++i) {
-      bytes = round(bytes);
-      auto childLength = i->GetLength();
-      auto src = i->Serialize();
-      memcpy(&data[bytes], &src[0], childLength);
-      bytes += childLength;
-    }
+  for (const auto& child : children) {
+    offset = round(offset);
+    size_t childLength = child.GetLength();
+    std::vector<BYTE> src = child.Serialize();
+    memcpy(&data[offset], &src[0], childLength);
+    offset += childLength;
   }
 
-  return move(data);
+  return std::move(data);
 }
 
 ResourceUpdater::ResourceUpdater() : module_(NULL) {
