@@ -699,15 +699,13 @@ bool ResourceUpdater::Commit() {
     }
 
     // convert the wchar back into char, so that it encodes correctly for Windows to read the XML.
-    std::vector<char> stringSection;
-    stringSection.clear();
-    stringSection.insert(stringSection.end(), trimmedStr.begin(), trimmedStr.end());
-    stringSection.insert(stringSection.end(), padding.begin(), padding.end());
+    std::wstring stringSectionW = trimmedStr + padding;
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+    std::string stringSection = converter.to_bytes(stringSectionW);
 
     if (!UpdateResourceW(ru.Get(), RT_MANIFEST, MAKEINTRESOURCEW(1),
                          1033, // this is hardcoded at 1033, ie, en-us, as that is what RT_MANIFEST default uses
                          &stringSection.at(0), sizeof(char) * stringSection.size())) {
-
       return false;
     }
   }
@@ -733,10 +731,9 @@ bool ResourceUpdater::Commit() {
     }
 
     // convert the wchar back into char, so that it encodes correctly for Windows to read the XML.
-    std::vector<char> stringSection;
-    stringSection.clear();
-    stringSection.insert(stringSection.end(), fileContents.begin(), fileContents.end());
-    stringSection.insert(stringSection.end(), padding.begin(), padding.end());
+    std::wstring stringSectionW = fileContents + padding;
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+    std::string stringSection = converter.to_bytes(stringSectionW);
 
     if (!UpdateResourceW(ru.Get(), RT_MANIFEST, MAKEINTRESOURCEW(1),
                          1033, // this is hardcoded at 1033, ie, en-us, as that is what RT_MANIFEST default uses
