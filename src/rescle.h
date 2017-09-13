@@ -81,10 +81,11 @@ class VersionInfo {
 
   VersionInfo(HMODULE hModule, WORD languageId);
 
-  std::vector<BYTE> Serialize();
+  std::vector<BYTE> Serialize() const;
 
   bool HasFixedFileInfo() const;
   VS_FIXEDFILEINFO& GetFixedFileInfo();
+  const VS_FIXEDFILEINFO& GetFixedFileInfo() const;
   void SetFixedFileInfo(const VS_FIXEDFILEINFO& value);
 
   std::vector<VersionStringTable> stringTables;
@@ -140,7 +141,7 @@ class ResourceUpdater {
   bool Commit();
 
  private:
-  bool SerializeStringTable(const StringValues& values, UINT blockId, std::vector<char>& out);
+  bool SerializeStringTable(const StringValues& values, UINT blockId, std::vector<char>* out);
 
   static BOOL CALLBACK OnEnumResourceName(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
   static BOOL CALLBACK OnEnumResourceManifest(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);

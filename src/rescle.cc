@@ -88,26 +88,28 @@ std::wstring ReadFileToString(const wchar_t* filename) {
 class ScopedFile {
  public:
   ScopedFile(const WCHAR* path)
-    : hFile(CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) {}
-  ~ScopedFile() { CloseHandle(hFile); }
+    : file_(CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) {}
+  ~ScopedFile() { CloseHandle(file_); }
 
-  operator HANDLE() { return hFile; }
+  operator HANDLE() { return file_; }
 
  private:
-  HANDLE hFile;
+  HANDLE file_;
 };
 
 class VersionStampValue {
  public:
-  WORD wLength = 0; // length in bytes of struct, including children
-  WORD wValueLength = 0; // stringfileinfo, stringtable: 0; string: Value size in WORD; var: Value size in bytes
-  WORD wType = 0; // 0: binary data; 1: text data
-  std::wstring szKey; // stringtable: 8-digit hex stored as UTF-16 (hiword: hi6: sublang, lo10: majorlang; loword: code page); must include zero words to align next member on 32-bit boundary
-  std::vector<BYTE> Value; // string: zero-terminated string; var: array of language & code page ID pairs
-  std::vector<VersionStampValue> Children;
+  WORD valueLength = 0; // stringfileinfo, stringtable: 0; string: Value size in WORD; var: Value size in bytes
+  WORD type = 0; // 0: binary data; 1: text data
+  std::wstring key; // stringtable: 8-digit hex stored as UTF-16 (hiword: hi6: sublang, lo10: majorlang; loword: code page); must include zero words to align next member on 32-bit boundary
+  std::vector<BYTE> value; // string: zero-terminated string; var: array of language & code page ID pairs
+  std::vector<VersionStampValue> children;
 
-  size_t GetLength();
-  std::vector<BYTE> Serialize();
+  size_t GetLength() const;
+  std::vector<BYTE> Serialize() const;
+
+ private:
+  mutable WORD length = 0; // length in bytes of struct, including children
 };
 
 }  // namespace
@@ -145,20 +147,24 @@ VS_FIXEDFILEINFO& VersionInfo::GetFixedFileInfo() {
   return fixedFileInfo_;
 }
 
+const VS_FIXEDFILEINFO& VersionInfo::GetFixedFileInfo() const {
+  return fixedFileInfo_;
+}
+
 void VersionInfo::SetFixedFileInfo(const VS_FIXEDFILEINFO& value) {
   fixedFileInfo_ = value;
 }
 
-std::vector<BYTE> VersionInfo::Serialize() {
+std::vector<BYTE> VersionInfo::Serialize() const {
   VersionStampValue versionInfo;
-  versionInfo.szKey = L"VS_VERSION_INFO";
-  versionInfo.wType = 0;
+  versionInfo.key = L"VS_VERSION_INFO";
+  versionInfo.type = 0;
 
   if (HasFixedFileInfo()) {
     auto size = sizeof(VS_FIXEDFILEINFO);
-    versionInfo.wValueLength = size;
+    versionInfo.valueLength = size;
 
-    auto& dst = versionInfo.Value;
+    auto& dst = versionInfo.value;
     dst.resize(size);
 
     memcpy(&dst[0], &GetFixedFileInfo(), size);
@@ -166,20 +172,20 @@ std::vector<BYTE> VersionInfo::Serialize() {
 
   {
     VersionStampValue stringFileInfo;
-    stringFileInfo.szKey = L"StringFileInfo";
-    stringFileInfo.wType = 1;
-    stringFileInfo.wValueLength = 0;
+    stringFileInfo.key = L"StringFileInfo";
+    stringFileInfo.type = 1;
+    stringFileInfo.valueLength = 0;
 
     for (const auto& iTable : stringTables) {
       VersionStampValue stringTableRaw;
-      stringTableRaw.wType = 1;
-      stringTableRaw.wValueLength = 0;
+      stringTableRaw.type = 1;
+      stringTableRaw.valueLength = 0;
 
       {
         auto& translate = iTable.encoding;
         std::wstringstream ss;
         ss << std::hex << std::setw(8) << std::setfill(L'0') << (translate.wLanguage << 16 | translate.wCodePage);
-        stringTableRaw.szKey = ss.str();
+        stringTableRaw.key = ss.str();
       }
 
       for (const auto& iString : iTable.strings) {
@@ -187,41 +193,41 @@ std::vector<BYTE> VersionInfo::Serialize() {
         auto strLenNullTerminated = stringValue.length() + 1;
 
         VersionStampValue stringRaw;
-        stringRaw.wType = 1;
-        stringRaw.szKey = iString.first;
-        stringRaw.wValueLength = strLenNullTerminated;
+        stringRaw.type = 1;
+        stringRaw.key = iString.first;
+        stringRaw.valueLength = strLenNullTerminated;
 
         auto size = strLenNullTerminated * sizeof(WCHAR);
-        auto& dst = stringRaw.Value;
+        auto& dst = stringRaw.value;
         dst.resize(size);
 
         auto src = stringValue.c_str();
 
         memcpy(&dst[0], src, size);
 
-        stringTableRaw.Children.push_back(std::move(stringRaw));
+        stringTableRaw.children.push_back(std::move(stringRaw));
       }
 
-      stringFileInfo.Children.push_back(std::move(stringTableRaw));
+      stringFileInfo.children.push_back(std::move(stringTableRaw));
     }
 
-    versionInfo.Children.push_back(std::move(stringFileInfo));
+    versionInfo.children.push_back(std::move(stringFileInfo));
   }
 
   {
     VersionStampValue varFileInfo;
-    varFileInfo.szKey = L"VarFileInfo";
-    varFileInfo.wType = 1;
-    varFileInfo.wValueLength = 0;
+    varFileInfo.key = L"VarFileInfo";
+    varFileInfo.type = 1;
+    varFileInfo.valueLength = 0;
 
     {
       VersionStampValue varRaw;
-      varRaw.szKey = L"Translation";
-      varRaw.wType = 0;
+      varRaw.key = L"Translation";
+      varRaw.type = 0;
 
       {
         auto newValueSize = sizeof(DWORD);
-        auto& dst = varRaw.Value;
+        auto& dst = varRaw.value;
         dst.resize(supportedTranslations.size() * newValueSize);
 
         for (auto iVar = 0; iVar < supportedTranslations.size(); ++iVar) {
@@ -230,16 +236,15 @@ std::vector<BYTE> VersionInfo::Serialize() {
           memcpy(&dst[iVar * newValueSize], &var, newValueSize);
         }
 
-        varRaw.wValueLength = varRaw.Value.size();
+        varRaw.valueLength = varRaw.value.size();
       }
 
-      varFileInfo.Children.push_back(std::move(varRaw));
+      varFileInfo.children.push_back(std::move(varRaw));
     }
 
-    versionInfo.Children.push_back(std::move(varFileInfo));
+    versionInfo.children.push_back(std::move(varFileInfo));
   }
 
-  versionInfo.wLength = versionInfo.GetLength();
   return move(versionInfo.Serialize());
 }
 
@@ -326,28 +331,28 @@ OffsetLengthPair VersionInfo::GetChildrenData(const BYTE* entryData) {
   return OffsetLengthPair(pChildren, childrenSize);
 }
 
-size_t VersionStampValue::GetLength() {
-  if (wLength > 0)
-    return wLength;
+size_t VersionStampValue::GetLength() const {
+  if (length > 0)
+    return length;
 
   size_t bytes = sizeof(VS_VERSION_HEADER);
-  bytes += static_cast<size_t>(szKey.length() + 1) * sizeof(WCHAR);
+  bytes += static_cast<size_t>(key.length() + 1) * sizeof(WCHAR);
 
-  if (!Value.empty())
-    bytes = round(bytes) + Value.size();
+  if (!value.empty())
+    bytes = round(bytes) + value.size();
 
-  if (!Children.empty()) {
-    for (auto i = Children.begin(); i != Children.end(); ++i) {
+  if (!children.empty()) {
+    for (auto i = children.begin(); i != children.end(); ++i) {
       bytes = round(bytes) + static_cast<size_t>(i->GetLength());
     }
   }
 
-  wLength = bytes;
+  length = bytes;
 
   return bytes;
 }
 
-std::vector<BYTE> VersionStampValue::Serialize() {
+std::vector<BYTE> VersionStampValue::Serialize() const {
   std::vector<BYTE> data = std::vector<BYTE>(GetLength());
   memset(&data[0], NULL, data.size());
 
@@ -357,19 +362,19 @@ std::vector<BYTE> VersionStampValue::Serialize() {
   memcpy(&data[bytes], this, headerSize);
   bytes += headerSize;
 
-  auto keySize = static_cast<size_t>(szKey.length() + 1) * sizeof(WCHAR);
-  memcpy(&data[bytes], szKey.c_str(), keySize);
+  auto keySize = static_cast<size_t>(key.length() + 1) * sizeof(WCHAR);
+  memcpy(&data[bytes], key.c_str(), keySize);
   bytes += keySize;
 
-  if (!Value.empty()) {
+  if (!value.empty()) {
     bytes = round(bytes);
-    auto valueSize = Value.size();
-    memcpy(&data[bytes], &Value[0], valueSize);
+    auto valueSize = value.size();
+    memcpy(&data[bytes], &value[0], valueSize);
     bytes += valueSize;
   }
 
-  if (!Children.empty()) {
-    for (auto i = Children.begin(); i != Children.end(); ++i) {
+  if (!children.empty()) {
+    for (auto i = children.begin(); i != children.end(); ++i) {
       bytes = round(bytes);
       auto childLength = i->GetLength();
       auto src = i->Serialize();
@@ -565,10 +570,11 @@ bool ResourceUpdater::ChangeString(UINT id, const WCHAR* value) {
   }
 }
 
-bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId, UINT iconBundle) {
-  auto& pIcon = iconBundleMap_[langId].iconBundles[iconBundle];
-  if (pIcon == nullptr)
-    pIcon = std::make_unique<IconsValue>();
+bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId,
+                              UINT iconBundle) {
+  const std::unique_ptr<IconsValue>& pIcon = iconBundleMap_[langId].iconBundles[iconBundle];
+  if (!pIcon)
+    return false;
 
   auto& icon = *pIcon;
   DWORD bytes;
@@ -619,12 +625,12 @@ bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId, UINT icon
 }
 
 bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId) {
-  auto& iconBundle = iconBundleMap_[langId].iconBundles.begin()->first;
+  UINT iconBundle = iconBundleMap_[langId].iconBundles.begin()->first;
   return SetIcon(path, langId, iconBundle);
 }
 
 bool ResourceUpdater::SetIcon(const WCHAR* path) {
-  auto& langId = iconBundleMap_.begin()->first;
+  LANGID langId = iconBundleMap_.begin()->first;
   return SetIcon(path, langId);
 }
 
@@ -641,18 +647,12 @@ bool ResourceUpdater::Commit() {
   }
 
   // update version info.
-  for (VersionStampMap::iterator i = versionStampMap_.begin(); i != versionStampMap_.end(); i++) {
-    auto& langId = i->first;
-    auto& versionInfo = i->second;
-    auto out = versionInfo.Serialize();
+  for (const auto& i : versionStampMap_) {
+    LANGID langId = i.first;
+    std::vector<BYTE> out = i.second.Serialize();
 
-    if (!UpdateResourceW
-      (ru.Get()
-      , RT_VERSION
-      , MAKEINTRESOURCEW(1)
-      , langId
-      , &out[0], static_cast<DWORD>(out.size()))) {
-
+    if (!UpdateResourceW(ru.Get(), RT_VERSION, MAKEINTRESOURCEW(1), langId,
+                         &out[0], static_cast<DWORD>(out.size()))) {
       return false;
     }
   }
@@ -675,8 +675,7 @@ bool ResourceUpdater::Commit() {
     int offset = (trimmedStr.length() + padding.length()) % 4;
     // multiple X by the number in offset
     pos = 0u;
-    for (int posCount = 0; posCount < offset; posCount = posCount + 1)
-    {
+    for (int posCount = 0; posCount < offset; posCount = posCount + 1) {
       if ((pos = padding.find(L"X", pos)) != std::string::npos) {
         padding.replace(pos, 1, L"XX");
         pos += executionLevel_.length();
@@ -728,33 +727,27 @@ bool ResourceUpdater::Commit() {
   }
 
   // update string table.
-  for (StringTableMap::iterator i = stringTableMap_.begin(); i != stringTableMap_.end(); i++) {
-    for (StringTable::iterator j = i->second.begin(); j != i->second.end(); j++) {
+  for (const auto& i : stringTableMap_) {
+    for (const auto& j : i.second) {
       std::vector<char> stringTableBuffer;
-      if (!SerializeStringTable(j->second, j->first, stringTableBuffer)) {
+      if (!SerializeStringTable(j.second, j.first, &stringTableBuffer)) {
         return false;
       }
 
-      if (!UpdateResourceW
-        (ru.Get()
-        , RT_STRING
-        , MAKEINTRESOURCEW(j->first + 1)
-        , i->first
-        , &stringTableBuffer[0], static_cast<DWORD>(stringTableBuffer.size()))) {
-
+      if (!UpdateResourceW(ru.Get(), RT_STRING, MAKEINTRESOURCEW(j.first + 1), i.first,
+                           &stringTableBuffer[0], static_cast<DWORD>(stringTableBuffer.size()))) {
         return false;
       }
     }
   }
 
-  for (auto iLangIconInfoPair = iconBundleMap_.begin(); iLangIconInfoPair != iconBundleMap_.end(); ++iLangIconInfoPair) {
-    auto& langId = iLangIconInfoPair->first;
-    auto& maxIconId = iLangIconInfoPair->second.maxIconId;
-    for (auto iNameBundlePair = iLangIconInfoPair->second.iconBundles.begin(); iNameBundlePair != iLangIconInfoPair->second.iconBundles.end(); ++iNameBundlePair)
-    {
-      auto& bundleId = iNameBundlePair->first;
-      auto& pIcon = iNameBundlePair->second;
-      if (pIcon == nullptr)
+  for (const auto& iLangIconInfoPair : iconBundleMap_) {
+    auto langId = iLangIconInfoPair.first;
+    auto maxIconId = iLangIconInfoPair.second.maxIconId;
+    for (const auto& iNameBundlePair : iLangIconInfoPair.second.iconBundles) {
+      UINT bundleId = iNameBundlePair.first;
+      const std::unique_ptr<IconsValue>& pIcon = iNameBundlePair.second;
+      if (!pIcon)
         continue;
 
       auto& icon = *pIcon;
@@ -786,21 +779,21 @@ bool ResourceUpdater::Commit() {
   return ru.Commit();
 }
 
-bool ResourceUpdater::SerializeStringTable(const StringValues& values, UINT blockId, std::vector<char>& out) {
+bool ResourceUpdater::SerializeStringTable(const StringValues& values, UINT blockId, std::vector<char>* out) {
   // calc total size.
   // string table is pascal string list.
   size_t size = 0;
   for (size_t i = 0; i < 16; i++) {
     size += sizeof(WORD);
-    size += values[ i ].length() * sizeof(WCHAR);
+    size += values[i].length() * sizeof(WCHAR);
   }
 
-  out.resize(size);
+  out->resize(size);
 
   // write.
-  char* pDst = &out[0];
+  char* pDst = &(*out)[0];
   for (size_t i = 0; i < 16; i++) {
-    WORD length = static_cast<WORD>(values[ i ].length());
+    WORD length = static_cast<WORD>(values[i].length());
     memcpy(pDst, &length, sizeof(length));
     pDst += sizeof(WORD);
 
@@ -818,22 +811,17 @@ bool ResourceUpdater::SerializeStringTable(const StringValues& values, UINT bloc
 BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam) {
   ResourceUpdater* instance = reinterpret_cast<ResourceUpdater*>(lParam);
   if (IS_INTRESOURCE(lpszName) && IS_INTRESOURCE(lpszType)) {
-    switch (reinterpret_cast<UINT>(lpszType))
-    {
-    case reinterpret_cast<UINT>(RT_VERSION):
-      {
-        try
-        {
+    switch (reinterpret_cast<UINT>(lpszType)) {
+      case reinterpret_cast<UINT>(RT_VERSION): {
+        try {
           instance->versionStampMap_[wIDLanguage] = VersionInfo(instance->module_, wIDLanguage);
         }
-        catch (const std::system_error& e)
-        {
+        catch (const std::system_error& e) {
           return false;
         }
+        break;
       }
-      break;
-    case reinterpret_cast<UINT>(RT_STRING):
-    {
+      case reinterpret_cast<UINT>(RT_STRING): {
         UINT id = reinterpret_cast<UINT>(lpszName) - 1;
         auto& vector = instance->stringTableMap_[wIDLanguage][id];
         for (size_t k = 0; k < 16; k++) {
@@ -842,21 +830,21 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
           buf.LoadStringW(instance->module_, id * 16 + k, wIDLanguage);
           vector.push_back(buf.GetBuffer());
         }
-    }
-      break;
-    case reinterpret_cast<UINT>(RT_ICON):
-      {
+        break;
+      }
+      case reinterpret_cast<UINT>(RT_ICON): {
         auto iconId = reinterpret_cast<UINT>(lpszName);
-        auto& maxIconId = instance->iconBundleMap_[wIDLanguage].maxIconId;
+        UINT maxIconId = instance->iconBundleMap_[wIDLanguage].maxIconId;
         if (iconId > maxIconId)
           maxIconId = iconId;
+        break;
       }
-      break;
-    case reinterpret_cast<UINT>(RT_GROUP_ICON):
-      instance->iconBundleMap_[wIDLanguage].iconBundles[reinterpret_cast<UINT>(lpszName)] = nullptr;
-      break;
-    default:
-      break;
+      case reinterpret_cast<UINT>(RT_GROUP_ICON): {
+        instance->iconBundleMap_[wIDLanguage].iconBundles[reinterpret_cast<UINT>(lpszName)] = nullptr;
+        break;
+      }
+      default:
+        break;
     }
   }
   return TRUE;
