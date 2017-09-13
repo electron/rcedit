@@ -78,7 +78,7 @@ struct VersionStringTable {
 struct VersionInfo {
   VersionInfo() {}
 
-  VersionInfo(const HMODULE& hModule, const WORD& languageId);
+  VersionInfo(HMODULE hModule, WORD languageId);
 
   std::vector<BYTE> Serialize();
 
@@ -115,17 +115,17 @@ class ResourceUpdater {
   ~ResourceUpdater();
 
   bool Load(const WCHAR* filename);
-  bool SetVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value);
+  bool SetVersionString(WORD languageId, const WCHAR* name, const WCHAR* value);
   bool SetVersionString(const WCHAR* name, const WCHAR* value);
-  const WCHAR* GetVersionString(const WORD& languageId, const WCHAR* name);
+  const WCHAR* GetVersionString(WORD languageId, const WCHAR* name);
   const WCHAR* GetVersionString(const WCHAR* name);
-  bool SetProductVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
-  bool SetProductVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
-  bool SetFileVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
-  bool SetFileVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4);
-  bool ChangeString(const WORD& languageId, const UINT& id, const WCHAR* value);
-  bool ChangeString(const UINT& id, const WCHAR* value);
-  bool SetIcon(const WCHAR* path, const LANGID& langId, const UINT& iconBundle);
+  bool SetProductVersion(WORD languageId, UINT id, unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
+  bool SetProductVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
+  bool SetFileVersion(WORD languageId, UINT id, unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
+  bool SetFileVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
+  bool ChangeString(WORD languageId, UINT id, const WCHAR* value);
+  bool ChangeString(UINT id, const WCHAR* value);
+  bool SetIcon(const WCHAR* path, const LANGID& langId, UINT iconBundle);
   bool SetIcon(const WCHAR* path, const LANGID& langId);
   bool SetIcon(const WCHAR* path);
   bool SetExecutionLevel(const WCHAR* value);
@@ -134,11 +134,11 @@ class ResourceUpdater {
   bool IsApplicationManifestSet();
   bool Commit();
 
-  static bool UpdateRaw(const WCHAR* filename, const WORD& languageId, const WCHAR* type, const UINT& id, const void* data, const size_t& dataSize, const bool& deleteOld);
-  static bool GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, BYTE*& data, size_t& dataSize);
+  static bool UpdateRaw(const WCHAR* filename, WORD languageId, const WCHAR* type, UINT id, const void* data, size_t dataSize, bool deleteOld);
+  static bool GetResourcePointer(HMODULE hModule, WORD languageId, int id, const WCHAR* type, BYTE*& data, size_t& dataSize);
 
  private:
-  bool SerializeStringTable(const StringValues& values, const UINT& blockId, std::vector<char>& out);
+  bool SerializeStringTable(const StringValues& values, UINT blockId, std::vector<char>& out);
 
   // not thread-safe
   static BOOL CALLBACK OnEnumResourceName(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
@@ -163,14 +163,14 @@ class ResourceUpdater {
 
 class ScopedResourceUpdater {
  public:
-  ScopedResourceUpdater(const WCHAR* filename, const bool& deleteOld);
+  ScopedResourceUpdater(const WCHAR* filename, bool deleteOld);
   ~ScopedResourceUpdater();
 
   HANDLE Get() const;
   bool Commit();
 
  private:
-  bool EndUpdate(const bool& doesCommit);
+  bool EndUpdate(bool doesCommit);
 
   HANDLE handle;
   bool commited;

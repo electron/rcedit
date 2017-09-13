@@ -106,7 +106,7 @@ typedef std::pair<const BYTE* const, const size_t> OffsetLengthPair;
 
 }  // namespace
 
-VersionInfo::VersionInfo(const HMODULE& hModule, const WORD& languageId) {
+VersionInfo::VersionInfo(HMODULE hModule, WORD languageId) {
   HRSRC hRsrc = FindResourceExW(hModule, RT_VERSION, MAKEINTRESOURCEW(1), languageId);
 
   if (hRsrc == NULL) {
@@ -433,7 +433,7 @@ bool ResourceUpdater::IsApplicationManifestSet() {
   return !applicationManifestPath.empty();
 }
 
-bool ResourceUpdater::SetVersionString(const WORD& languageId, const WCHAR* name, const WCHAR* value) {
+bool ResourceUpdater::SetVersionString(WORD languageId, const WCHAR* name, const WCHAR* value) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
   }
@@ -466,7 +466,7 @@ bool ResourceUpdater::SetVersionString(const WCHAR* name, const WCHAR* value) {
   }
 }
 
-const WCHAR* ResourceUpdater::GetVersionString(const WORD& languageId, const WCHAR* name) {
+const WCHAR* ResourceUpdater::GetVersionString(WORD languageId, const WCHAR* name) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return NULL;
   }
@@ -494,7 +494,7 @@ const WCHAR* ResourceUpdater::GetVersionString(const WCHAR* name) {
   }
 }
 
-bool ResourceUpdater::SetProductVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4) {
+bool ResourceUpdater::SetProductVersion(WORD languageId, UINT id, unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
   }
@@ -512,7 +512,7 @@ bool ResourceUpdater::SetProductVersion(const WORD& languageId, const UINT& id, 
   return true;
 }
 
-bool ResourceUpdater::SetProductVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4) {
+bool ResourceUpdater::SetProductVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4) {
   if (versionStampMap.size() < 1) {
     return false;
   } else {
@@ -520,7 +520,7 @@ bool ResourceUpdater::SetProductVersion(const unsigned short& v1, const unsigned
   }
 }
 
-bool ResourceUpdater::SetFileVersion(const WORD& languageId, const UINT& id, const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4) {
+bool ResourceUpdater::SetFileVersion(WORD languageId, UINT id, unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4) {
   if (versionStampMap.find(languageId) == versionStampMap.end()) {
     return false;
   }
@@ -537,7 +537,7 @@ bool ResourceUpdater::SetFileVersion(const WORD& languageId, const UINT& id, con
   return true;
 }
 
-bool ResourceUpdater::SetFileVersion(const unsigned short& v1, const unsigned short& v2, const unsigned short& v3, const unsigned short& v4) {
+bool ResourceUpdater::SetFileVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4) {
   if (versionStampMap.size() < 1) {
     return false;
   } else {
@@ -545,7 +545,7 @@ bool ResourceUpdater::SetFileVersion(const unsigned short& v1, const unsigned sh
   }
 }
 
-bool ResourceUpdater::ChangeString(const WORD& languageId, const UINT& id, const WCHAR* value) {
+bool ResourceUpdater::ChangeString(WORD languageId, UINT id, const WCHAR* value) {
   if (stringTableMap.find(languageId) == stringTableMap.end()) {
     return false;
   }
@@ -564,7 +564,7 @@ bool ResourceUpdater::ChangeString(const WORD& languageId, const UINT& id, const
   return true;
 }
 
-bool ResourceUpdater::ChangeString(const UINT& id, const WCHAR* value) {
+bool ResourceUpdater::ChangeString(UINT id, const WCHAR* value) {
   if (stringTableMap.size() < 1) {
     return false;
   } else {
@@ -572,7 +572,7 @@ bool ResourceUpdater::ChangeString(const UINT& id, const WCHAR* value) {
   }
 }
 
-bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId, const UINT& iconBundle) {
+bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId, UINT iconBundle) {
   auto& pIcon = iconBundleMap[langId].IconBundles[iconBundle];
   if (pIcon == nullptr)
     pIcon = std::make_unique<IconsValue>();
@@ -804,7 +804,7 @@ bool ResourceUpdater::Commit() {
   return ru.Commit();
 }
 
-bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& languageId, const int& id, const WCHAR* type, BYTE*& data, size_t& dataSize) {
+bool ResourceUpdater::GetResourcePointer(HMODULE hModule, WORD languageId, int id, const WCHAR* type, BYTE*& data, size_t& dataSize) {
   if (!IS_INTRESOURCE(id)) {
     return false;
   }
@@ -837,12 +837,12 @@ bool ResourceUpdater::GetResourcePointer(const HMODULE& hModule, const WORD& lan
 
 // static
 bool ResourceUpdater::UpdateRaw(const WCHAR* filename,
-                                const WORD& languageId,
+                                WORD languageId,
                                 const WCHAR* type,
-                                const UINT& id,
+                                UINT id,
                                 const void* data,
-                                const size_t& dataSize,
-                                const bool& deleteOld) {
+                                size_t dataSize,
+                                bool deleteOld) {
 
   ScopedResourceUpdater ru(filename, deleteOld);
   if (ru.Get() == NULL) {
@@ -856,7 +856,7 @@ bool ResourceUpdater::UpdateRaw(const WCHAR* filename,
   }
 }
 
-bool ResourceUpdater::SerializeStringTable(const StringValues& values, const UINT& blockId, std::vector<char>& out) {
+bool ResourceUpdater::SerializeStringTable(const StringValues& values, UINT blockId, std::vector<char>& out) {
   // calc total size.
   // string table is pascal string list.
   size_t size = 0;
@@ -965,7 +965,7 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceManifest(HMODULE hModule, LPCTSTR l
   return TRUE;   // Keep going
 }
 
-ScopedResourceUpdater::ScopedResourceUpdater(const WCHAR* filename, const bool& deleteOld)
+ScopedResourceUpdater::ScopedResourceUpdater(const WCHAR* filename, bool deleteOld)
     : handle(NULL) , commited(false) {
   handle = BeginUpdateResourceW(filename, deleteOld ? TRUE : FALSE);
 }
@@ -985,7 +985,7 @@ bool ScopedResourceUpdater::Commit() {
   return EndUpdate(true);
 }
 
-bool ScopedResourceUpdater::EndUpdate(const bool& doesCommit) {
+bool ScopedResourceUpdater::EndUpdate(bool doesCommit) {
   BOOL fDiscard = doesCommit ? FALSE : TRUE;
   BOOL bResult = EndUpdateResourceW(handle, fDiscard);
   DWORD e = GetLastError();
