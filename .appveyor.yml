@@ -4,6 +4,10 @@ image:
 
 configuration: Default
 
+platform:
+- x64
+- x86
+
 before_build:
 - cmd: |
         git clone --depth 1 https://chromium.googlesource.com/external/gyp
@@ -12,7 +16,7 @@ before_build:
 build:
   project: rcedit.sln
   parallel: true
-  verbosity: detailed
+  verbosity: minimal
 
 artifacts:
 - path: Default\rcedit.exe
