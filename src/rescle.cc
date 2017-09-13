@@ -170,27 +170,25 @@ std::vector<BYTE> VersionInfo::Serialize() {
     stringFileInfo.wType = 1;
     stringFileInfo.wValueLength = 0;
 
-    auto& stringTables = StringTables;
-    for (auto iTable = stringTables.begin(); iTable != stringTables.end(); ++iTable) {
+    for (const auto& iTable : stringTables) {
       VersionStampValue stringTableRaw;
       stringTableRaw.wType = 1;
       stringTableRaw.wValueLength = 0;
 
       {
-        auto& translate = iTable->Encoding;
+        auto& translate = iTable.encoding;
         std::wstringstream ss;
         ss << std::hex << std::setw(8) << std::setfill(L'0') << (translate.wLanguage << 16 | translate.wCodePage);
         stringTableRaw.szKey = ss.str();
       }
 
-      auto& strings = iTable->Strings;
-      for (auto iString = strings.begin(); iString != strings.end(); ++iString) {
-        auto& stringValue = iString->second;
+      for (const auto& iString : iTable.strings) {
+        const auto& stringValue = iString.second;
         auto strLenNullTerminated = stringValue.length() + 1;
 
         VersionStampValue stringRaw;
         stringRaw.wType = 1;
-        stringRaw.szKey = iString->first;
+        stringRaw.szKey = iString.first;
         stringRaw.wValueLength = strLenNullTerminated;
 
         auto size = strLenNullTerminated * sizeof(WCHAR);
@@ -222,13 +220,12 @@ std::vector<BYTE> VersionInfo::Serialize() {
       varRaw.wType = 0;
 
       {
-        auto& src = SupportedTranslations;
         auto newValueSize = sizeof(DWORD);
         auto& dst = varRaw.Value;
-        dst.resize(src.size() * newValueSize);
+        dst.resize(supportedTranslations.size() * newValueSize);
 
-        for (auto iVar = 0; iVar < src.size(); ++iVar) {
-          auto& translate = src[iVar];
+        for (auto iVar = 0; iVar < supportedTranslations.size(); ++iVar) {
+          auto& translate = supportedTranslations[iVar];
           auto var = DWORD(translate.wCodePage) << 16 | translate.wLanguage;
           memcpy(&dst[iVar * newValueSize], &var, newValueSize);
         }
@@ -264,9 +261,9 @@ void VersionInfo::DeserializeVersionInfo(const BYTE* const pData, size_t size) {
     auto pKey = reinterpret_cast<const VS_VERSION_STRING*>(p)->szKey;
     auto versionInfoChildData = GetChildrenData(p);
     if (wcscmp(pKey, L"StringFileInfo") == 0) {
-      DeserializeVersionStringFileInfo(versionInfoChildData.first, versionInfoChildData.second, StringTables);
+      DeserializeVersionStringFileInfo(versionInfoChildData.first, versionInfoChildData.second, stringTables);
     } else if (wcscmp(pKey, L"VarFileInfo") == 0) {
-      DeserializeVarFileInfo(versionInfoChildData.first, SupportedTranslations);
+      DeserializeVarFileInfo(versionInfoChildData.first, supportedTranslations);
     }
 
     p += round(reinterpret_cast<const VS_VERSION_STRING*>(p)->Header.wLength);
@@ -282,13 +279,13 @@ VersionStringTable VersionInfo::DeserializeVersionStringTable(const BYTE* tableD
   VersionStringTable tableEntry;
 
   // unicode string of 8 hex digits
-  tableEntry.Encoding.wLanguage = langIdCodePagePair >> 16;
-  tableEntry.Encoding.wCodePage = langIdCodePagePair;
+  tableEntry.encoding.wLanguage = langIdCodePagePair >> 16;
+  tableEntry.encoding.wCodePage = langIdCodePagePair;
 
   for (auto posStrings = 0U; posStrings < strings.second;) {
     const auto stringEntry = reinterpret_cast<const VS_VERSION_STRING* const>(strings.first + posStrings);
     const auto stringData = GetChildrenData(strings.first + posStrings);
-    tableEntry.Strings.push_back(std::pair<std::wstring, std::wstring>(stringEntry->szKey, std::wstring(reinterpret_cast<const WCHAR* const>(stringData.first), stringEntry->Header.wValueLength)));
+    tableEntry.strings.push_back(std::pair<std::wstring, std::wstring>(stringEntry->szKey, std::wstring(reinterpret_cast<const WCHAR* const>(stringData.first), stringEntry->Header.wValueLength)));
 
     posStrings += round(stringEntry->Header.wLength);
   }
@@ -437,9 +434,9 @@ bool ResourceUpdater::SetVersionString(WORD languageId, const WCHAR* name, const
   std::wstring nameStr(name);
   std::wstring valueStr(value);
 
-  auto& stringTables = versionStampMap[languageId].StringTables;
+  auto& stringTables = versionStampMap[languageId].stringTables;
   for (auto j = stringTables.begin(); j != stringTables.end(); ++j) {
-    auto& stringPairs = j->Strings;
+    auto& stringPairs = j->strings;
     for (auto k = stringPairs.begin(); k != stringPairs.end(); ++k) {
       if (k->first == nameStr) {
         k->second = valueStr;
@@ -469,9 +466,9 @@ const WCHAR* ResourceUpdater::GetVersionString(WORD languageId, const WCHAR* nam
 
   std::wstring nameStr(name);
 
-  const auto& stringTables = versionStampMap[languageId].StringTables;
+  const auto& stringTables = versionStampMap[languageId].stringTables;
   for (const auto& j : stringTables) {
-    const auto& stringPairs = j.Strings;
+    const auto& stringPairs = j.strings;
     for (const auto& k : stringPairs) {
       if (k.first == nameStr) {
         return k.second.c_str();

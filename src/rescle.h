@@ -71,8 +71,8 @@ typedef std::pair<std::wstring, std::wstring> VersionString;
 typedef std::pair<const BYTE* const, const size_t> OffsetLengthPair;
 
 struct VersionStringTable {
-  Translate Encoding;
-  std::vector<VersionString> Strings;
+  Translate encoding;
+  std::vector<VersionString> strings;
 };
 
 class VersionInfo {
@@ -87,8 +87,8 @@ class VersionInfo {
   VS_FIXEDFILEINFO& GetFixedFileInfo();
   void SetFixedFileInfo(const VS_FIXEDFILEINFO& value);
 
-  std::vector<VersionStringTable> StringTables;
-  std::vector<Translate> SupportedTranslations;
+  std::vector<VersionStringTable> stringTables;
+  std::vector<Translate> supportedTranslations;
 
  private:
   VS_FIXEDFILEINFO m_fixedFileInfo;
@@ -157,8 +157,6 @@ class ResourceUpdater {
   VersionStampMap versionStampMap;
   StringTableMap stringTableMap;
   IconTableMap iconBundleMap;
-
-  unsigned short IconCount;
 };
 
 class ScopedResourceUpdater {
