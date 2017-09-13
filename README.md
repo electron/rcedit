@@ -1,12 +1,24 @@
 # rcedit [![Build status](https://ci.appveyor.com/api/projects/status/o8d047nebu8j94v3/branch/master?svg=true)](https://ci.appveyor.com/project/electron-bot/rcedit/branch/master)
 
-Command line tool to edit resources of exe file on Windows
+Command line tool to edit resources of exe file on Windows.
+
+## Exectuables
+
+Prebuilt binaries can be found in the artifacts of appveyor jobs.
 
 ## Building
-  * Make sure you have gyp is configured in your system. If not, clone gyp from https://chromium.googlesource.com/external/gyp
-  * Clone the repository
-  * Run `gyp rcedit.gyp --depth .`
-  * Build rcedit.sln with Visual Studio 2015 or above
+
+1. Clone the repository
+2. Open `rcedit.sln` with Visual Studio 2015 or above
+3. Build
+
+## Generate solution files
+
+If you have modified the gyp files, you should regenerate the solution files:
+
+1. Make sure you have gyp is configured in your system. If not, clone gyp from
+   https://chromium.googlesource.com/external/gyp
+2. Run `gyp rcedit.gyp --depth .`
 
 ## Docs
 
