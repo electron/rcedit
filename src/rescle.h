@@ -91,7 +91,7 @@ class VersionInfo {
   std::vector<Translate> supportedTranslations;
 
  private:
-  VS_FIXEDFILEINFO m_fixedFileInfo;
+  VS_FIXEDFILEINFO fixedFileInfo_;
 
   void DeserializeVersionInfo(const BYTE* const pData, size_t size);
 
@@ -106,14 +106,12 @@ class ResourceUpdater {
   typedef std::vector<std::wstring> StringValues;
   typedef std::map<UINT,StringValues> StringTable;
   typedef std::map<WORD,StringTable> StringTableMap;
-
   typedef std::map<LANGID, VersionInfo> VersionStampMap;
-
   typedef std::map<UINT, std::unique_ptr<IconsValue>> IconTable;
 
   struct IconResInfo {
-    UINT MaxIconId = 0;
-    IconTable IconBundles;
+    UINT maxIconId = 0;
+    IconTable iconBundles;
   };
 
   typedef std::map<LANGID, IconResInfo> IconTableMap;
@@ -148,15 +146,15 @@ class ResourceUpdater {
   static BOOL CALLBACK OnEnumResourceManifest(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam);
   static BOOL CALLBACK OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lpszType, LPCWSTR lpszName, WORD wIDLanguage, LONG_PTR lParam);
 
-  HMODULE hModule;
-  std::wstring filename;
-  std::wstring executionLevel;
-  std::wstring applicationManifestPath;
-  std::wstring original_executionLevel;
-  std::wstring manifestString;
-  VersionStampMap versionStampMap;
-  StringTableMap stringTableMap;
-  IconTableMap iconBundleMap;
+  HMODULE module_;
+  std::wstring filename_;
+  std::wstring executionLevel_;
+  std::wstring originalExecutionLevel_;
+  std::wstring applicationManifestPath_;
+  std::wstring manifestString_;
+  VersionStampMap versionStampMap_;
+  StringTableMap stringTableMap_;
+  IconTableMap iconBundleMap_;
 };
 
 class ScopedResourceUpdater {
@@ -170,8 +168,8 @@ class ScopedResourceUpdater {
  private:
   bool EndUpdate(bool doesCommit);
 
-  HANDLE handle;
-  bool commited;
+  HANDLE handle_;
+  bool commited_ = false;
 };
 
 }  // namespace rescle
