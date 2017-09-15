@@ -553,9 +553,9 @@ bool ResourceUpdater::ChangeString(UINT id, const WCHAR* value) {
 
 bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId,
                               UINT iconBundle) {
-  const std::unique_ptr<IconsValue>& pIcon = iconBundleMap_[langId].iconBundles[iconBundle];
+  std::unique_ptr<IconsValue>& pIcon = iconBundleMap_[langId].iconBundles[iconBundle];
   if (!pIcon)
-    return false;
+    pIcon = std::make_unique<IconsValue>();
 
   auto& icon = *pIcon;
   DWORD bytes;
