@@ -146,8 +146,10 @@ int wmain(int argc, const wchar_t* argv[]) {
         return print_error("Unexpected trailing arguments");
 
       loaded = true;
-      if (!updater.Load(argv[i]))
-        return print_error("Unable to load file");
+      if (!updater.Load(argv[i])) {
+        fprintf(stderr, "Unable to load file: \"%ls\"\n", argv[i]);
+        return 1;
+      }
 
     }
   }
