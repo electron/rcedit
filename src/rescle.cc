@@ -72,6 +72,9 @@ typedef struct _VS_VERSION_ROOT {
 } VS_VERSION_ROOT;
 #pragma pack(pop)
 
+// The default en-us LANGID.
+LANGID kLangEnUs = 1033;
+
 template<typename T>
 inline T round(T value, int modula = 4) {
   return value + ((value % modula > 0) ? (modula - value % modula) : 0);
@@ -611,7 +614,8 @@ bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId) {
 }
 
 bool ResourceUpdater::SetIcon(const WCHAR* path) {
-  LANGID langId = iconBundleMap_.begin()->first;
+  LANGID langId = iconBundleMap_.empty() ? kLangEnUs
+                                         : iconBundleMap_.begin()->first;
   return SetIcon(path, langId);
 }
 
@@ -669,7 +673,7 @@ bool ResourceUpdater::Commit() {
     std::string stringSection = converter.to_bytes(stringSectionW);
 
     if (!UpdateResourceW(ru.Get(), RT_MANIFEST, MAKEINTRESOURCEW(1),
-                         1033, // this is hardcoded at 1033, ie, en-us, as that is what RT_MANIFEST default uses
+                         kLangEnUs, // this is hardcoded at 1033, ie, en-us, as that is what RT_MANIFEST default uses
                          &stringSection.at(0), sizeof(char) * stringSection.size())) {
       return false;
     }
@@ -701,7 +705,7 @@ bool ResourceUpdater::Commit() {
     std::string stringSection = converter.to_bytes(stringSectionW);
 
     if (!UpdateResourceW(ru.Get(), RT_MANIFEST, MAKEINTRESOURCEW(1),
-                         1033, // this is hardcoded at 1033, ie, en-us, as that is what RT_MANIFEST default uses
+                         kLangEnUs, // this is hardcoded at 1033, ie, en-us, as that is what RT_MANIFEST default uses
                          &stringSection.at(0), sizeof(char) * stringSection.size())) {
       return false;
     }
