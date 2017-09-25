@@ -5,8 +5,13 @@
 #include <string.h>
 
 #include "rescle.h"
+#include "version.h"
 
 namespace {
+
+void print_help() {
+  fprintf(stdout, "Rcedit " RCEDIT_VERSION ":\n");
+}
 
 bool print_error(const char* message) {
   fprintf(stderr, "Fatal error: %s\n", message);
@@ -31,6 +36,13 @@ bool parse_version_string(const wchar_t* str, unsigned short *v1, unsigned short
 int wmain(int argc, const wchar_t* argv[]) {
   bool loaded = false;
   rescle::ResourceUpdater updater;
+
+  if (argc == 1 ||
+      (argc == 2 && wcscmp(argv[1], L"-h") == 0) ||
+      (argc == 2 && wcscmp(argv[1], L"--help") == 0)) {
+    print_help();
+    return 0;
+  }
 
   for (int i = 1; i < argc; ++i) {
     if (wcscmp(argv[i], L"--set-version-string") == 0 ||
@@ -99,9 +111,7 @@ int wmain(int argc, const wchar_t* argv[]) {
         return print_error("--set-requested-execution-level requires asInvoker, highestAvailable or requireAdministrator");
 
       if (updater.IsApplicationManifestSet())
-      {
         print_warning("--set-requested-execution-level is ignored if --application-manifest is set");
-      }
 
       if (!updater.SetExecutionLevel(argv[++i]))
         return print_error("Unable to set execution level");
@@ -112,9 +122,7 @@ int wmain(int argc, const wchar_t* argv[]) {
         return print_error("--application-manifest requires local path");
 
       if (updater.IsExecutionLevelSet())
-      {
         print_warning("--set-requested-execution-level is ignored if --application-manifest is set");
-      }
 
       if (!updater.SetApplicationManifest(argv[++i]))
         return print_error("Unable to set application manifest");
