@@ -105,8 +105,8 @@ class VersionInfo {
 class ResourceUpdater {
  public:
   typedef std::vector<std::wstring> StringValues;
-  typedef std::map<UINT,StringValues> StringTable;
-  typedef std::map<WORD,StringTable> StringTableMap;
+  typedef std::map<UINT, StringValues> StringTable;
+  typedef std::map<WORD, StringTable> StringTableMap;
   typedef std::map<LANGID, VersionInfo> VersionStampMap;
   typedef std::map<UINT, std::unique_ptr<IconsValue>> IconTable;
 

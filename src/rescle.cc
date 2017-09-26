@@ -530,30 +530,27 @@ bool ResourceUpdater::SetFileVersion(unsigned short v1, unsigned short v2, unsig
 }
 
 bool ResourceUpdater::ChangeString(WORD languageId, UINT id, const WCHAR* value) {
-  if (stringTableMap_.find(languageId) == stringTableMap_.end()) {
-    return false;
-  }
-
-  StringTable& table = stringTableMap_[ languageId ];
+  StringTable& table = stringTableMap_[languageId];
 
   UINT blockId = id / 16;
   if (table.find(blockId) == table.end()) {
-    return false;
+    // Fill the table until we reach the block.
+    for (size_t i = table.size(); i <= blockId; ++i) {
+      table[i] = std::vector<std::wstring>(16);
+    }
   }
 
-  assert(table[ blockId ].size() == 16);
+  assert(table[blockId].size() == 16);
   UINT blockIndex = id % 16;
-  table[ blockId ][ blockIndex ] = value;
+  table[blockId][blockIndex] = value;
 
   return true;
 }
 
 bool ResourceUpdater::ChangeString(UINT id, const WCHAR* value) {
-  if (stringTableMap_.size() < 1) {
-    return false;
-  } else {
-    return ChangeString(stringTableMap_.begin()->first, id, value);
-  }
+  LANGID langId = stringTableMap_.empty() ? kLangEnUs
+                                          : stringTableMap_.begin()->first;
+  return ChangeString(langId, id, value);
 }
 
 bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId,
