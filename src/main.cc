@@ -142,8 +142,10 @@ int wmain(int argc, const wchar_t* argv[]) {
         return print_error("Unable to change string");
 
     } else {
-      if (loaded)
-        return print_error("Unexpected trailing arguments");
+      if (loaded) {
+        fprintf(stderr, "Unrecognized argument: \"%ls\"\n", argv[i]);
+        return 1;
+      }
 
       loaded = true;
       if (!updater.Load(argv[i])) {
