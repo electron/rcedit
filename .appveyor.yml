@@ -32,7 +32,7 @@ deploy:
     description: '(placeholder)'
     auth_token:
       secure: XfjkG3WqHpNfpT3s2KB8h9LgGvSKqMvJGafkBWcwR2nCGPTQdPolH2Qb6T9WkpW5
-    artifact: /.*\.zip/
+    artifact: /.*\.exe/
     draft: true
     force_update: true
     prerelease: false
