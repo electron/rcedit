@@ -381,7 +381,12 @@ ResourceUpdater::~ResourceUpdater() {
 }
 
 bool ResourceUpdater::Load(const WCHAR* filename) {
-  module_ = LoadLibraryExW(filename, NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
+  wchar_t abspath[MAX_PATH] = {0};
+  if (_wfullpath(abspath, filename, MAX_PATH))
+    module_ = LoadLibraryExW(abspath, NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
+  else
+    module_ = LoadLibraryExW(filename, NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
+
   if (module_ == NULL) {
     return false;
   }
