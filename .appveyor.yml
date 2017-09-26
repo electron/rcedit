@@ -17,13 +17,16 @@ build:
   parallel: true
   verbosity: minimal
 
+after_build:
+  - cmd: if %PLATFORM%==Win32 (move Default\rcedit.exe Default\rcedit-x86.exe)
+  - cmd: if %PLATFORM%==x64 (move Default\rcedit.exe Default\rcedit-x64.exe)
+
 branches:
   only:
     - master
 
 artifacts:
-  - path: Default\rcedit.exe
-    name: rcedit-$(PLATFORM).exe
+  - path: Default\*.exe
 
 deploy:
   - provider: GitHub
