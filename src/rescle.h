@@ -77,8 +77,7 @@ struct VersionStringTable {
 
 class VersionInfo {
  public:
-  VersionInfo() {}
-
+  VersionInfo();
   VersionInfo(HMODULE hModule, WORD languageId);
 
   std::vector<BYTE> Serialize() const;
@@ -94,6 +93,7 @@ class VersionInfo {
  private:
   VS_FIXEDFILEINFO fixedFileInfo_;
 
+  void FillDefaultData();
   void DeserializeVersionInfo(const BYTE* pData, size_t size);
 
   VersionStringTable DeserializeVersionStringTable(const BYTE* tableData);

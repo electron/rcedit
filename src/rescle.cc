@@ -74,6 +74,7 @@ typedef struct _VS_VERSION_ROOT {
 
 // The default en-us LANGID.
 LANGID kLangEnUs = 1033;
+LANGID kCodePageEnUs = 1200;
 
 template<typename T>
 inline T round(T value, int modula = 4) {
@@ -113,6 +114,10 @@ struct VersionStampValue {
 
 }  // namespace
 
+VersionInfo::VersionInfo() {
+  FillDefaultData();
+}
+
 VersionInfo::VersionInfo(HMODULE hModule, WORD languageId) {
   HRSRC hRsrc = FindResourceExW(hModule, RT_VERSION, MAKEINTRESOURCEW(1), languageId);
 
@@ -136,6 +141,7 @@ VersionInfo::VersionInfo(HMODULE hModule, WORD languageId) {
   }
 
   DeserializeVersionInfo(static_cast<BYTE*>(p), size);
+  FillDefaultData();
 }
 
 bool VersionInfo::HasFixedFileInfo() const {
@@ -245,6 +251,19 @@ std::vector<BYTE> VersionInfo::Serialize() const {
   }
 
   return std::move(versionInfo.Serialize());
+}
+
+void VersionInfo::FillDefaultData() {
+  if (stringTables.empty()) {
+    Translate enUsTranslate = {kLangEnUs, kCodePageEnUs};
+    stringTables.push_back({enUsTranslate});
+    supportedTranslations.push_back(enUsTranslate);
+  }
+  if (!HasFixedFileInfo()) {
+    fixedFileInfo_ = {0};
+    fixedFileInfo_.dwSignature = 0xFEEF04BD;
+    fixedFileInfo_.dwFileType = VFT_APP;
+  }
 }
 
 void VersionInfo::DeserializeVersionInfo(const BYTE* pData, size_t size) {
@@ -421,10 +440,6 @@ bool ResourceUpdater::IsApplicationManifestSet() {
 }
 
 bool ResourceUpdater::SetVersionString(WORD languageId, const WCHAR* name, const WCHAR* value) {
-  if (versionStampMap_.find(languageId) == versionStampMap_.end()) {
-    return false;
-  }
-
   std::wstring nameStr(name);
   std::wstring valueStr(value);
 
@@ -446,18 +461,12 @@ bool ResourceUpdater::SetVersionString(WORD languageId, const WCHAR* name, const
 }
 
 bool ResourceUpdater::SetVersionString(const WCHAR* name, const WCHAR* value) {
-  if (versionStampMap_.size() < 1) {
-    return false;
-  } else {
-    return SetVersionString(versionStampMap_.begin()->first, name, value);
-  }
+  LANGID langId = versionStampMap_.empty() ? kLangEnUs
+                                           : versionStampMap_.begin()->first;
+  return SetVersionString(langId, name, value);
 }
 
 const WCHAR* ResourceUpdater::GetVersionString(WORD languageId, const WCHAR* name) {
-  if (versionStampMap_.find(languageId) == versionStampMap_.end()) {
-    return NULL;
-  }
-
   std::wstring nameStr(name);
 
   const auto& stringTables = versionStampMap_[languageId].stringTables;
@@ -474,7 +483,7 @@ const WCHAR* ResourceUpdater::GetVersionString(WORD languageId, const WCHAR* nam
 }
 
 const WCHAR* ResourceUpdater::GetVersionString(const WCHAR* name) {
-  if (versionStampMap_.size() < 1) {
+  if (versionStampMap_.empty()) {
     return NULL;
   } else {
     return GetVersionString(versionStampMap_.begin()->first, name);
@@ -482,10 +491,6 @@ const WCHAR* ResourceUpdater::GetVersionString(const WCHAR* name) {
 }
 
 bool ResourceUpdater::SetProductVersion(WORD languageId, UINT id, unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4) {
-  if (versionStampMap_.find(languageId) == versionStampMap_.end()) {
-    return false;
-  }
-
   VersionInfo& versionInfo = versionStampMap_[languageId];
   if (!versionInfo.HasFixedFileInfo()) {
     return false;
@@ -500,19 +505,13 @@ bool ResourceUpdater::SetProductVersion(WORD languageId, UINT id, unsigned short
 }
 
 bool ResourceUpdater::SetProductVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4) {
-  if (versionStampMap_.size() < 1) {
-    return false;
-  } else {
-    return SetProductVersion(versionStampMap_.begin()->first, 1, v1, v2, v3, v4);
-  }
+  LANGID langId = versionStampMap_.empty() ? kLangEnUs
+                                           : versionStampMap_.begin()->first;
+  return SetProductVersion(langId, 1, v1, v2, v3, v4);
 }
 
 bool ResourceUpdater::SetFileVersion(WORD languageId, UINT id, unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4) {
-  if (versionStampMap_.find(languageId) == versionStampMap_.end()) {
-    return false;
-  }
-
-  VersionInfo& versionInfo = versionStampMap_[ languageId ];
+  VersionInfo& versionInfo = versionStampMap_[languageId];
   if (!versionInfo.HasFixedFileInfo()) {
     return false;
   }
@@ -525,11 +524,9 @@ bool ResourceUpdater::SetFileVersion(WORD languageId, UINT id, unsigned short v1
 }
 
 bool ResourceUpdater::SetFileVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4) {
-  if (versionStampMap_.size() < 1) {
-    return false;
-  } else {
-    return SetFileVersion(versionStampMap_.begin()->first, 1, v1, v2, v3, v4);
-  }
+  LANGID langId = versionStampMap_.empty() ? kLangEnUs
+                                           : versionStampMap_.begin()->first;
+  return SetFileVersion(langId, 1, v1, v2, v3, v4);
 }
 
 bool ResourceUpdater::ChangeString(WORD languageId, UINT id, const WCHAR* value) {
