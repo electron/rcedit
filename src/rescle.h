@@ -77,8 +77,7 @@ struct VersionStringTable {
 
 class VersionInfo {
  public:
-  VersionInfo() {}
-
+  VersionInfo();
   VersionInfo(HMODULE hModule, WORD languageId);
 
   std::vector<BYTE> Serialize() const;
@@ -94,6 +93,7 @@ class VersionInfo {
  private:
   VS_FIXEDFILEINFO fixedFileInfo_;
 
+  void FillDefaultData();
   void DeserializeVersionInfo(const BYTE* pData, size_t size);
 
   VersionStringTable DeserializeVersionStringTable(const BYTE* tableData);
@@ -105,8 +105,8 @@ class VersionInfo {
 class ResourceUpdater {
  public:
   typedef std::vector<std::wstring> StringValues;
-  typedef std::map<UINT,StringValues> StringTable;
-  typedef std::map<WORD,StringTable> StringTableMap;
+  typedef std::map<UINT, StringValues> StringTable;
+  typedef std::map<WORD, StringTable> StringTableMap;
   typedef std::map<LANGID, VersionInfo> VersionStampMap;
   typedef std::map<UINT, std::unique_ptr<IconsValue>> IconTable;
 
