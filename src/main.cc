@@ -5,8 +5,25 @@
 #include <string.h>
 
 #include "rescle.h"
+#include "version.h"
 
 namespace {
+
+void print_help() {
+  fprintf(stdout,
+"Rcedit " RCEDIT_VERSION ": Edit resources of exe.\n\n"
+"Usage: rcedit <filename> [options...]\n\n"
+"Options:\n"
+"  -h, --help                                 Show this message\n"
+"  --set-version-string <key> <value>         Set version string\n"
+"  --get-version-string <key>                 Print version string\n"
+"  --set-file-version <version>               Set FileVersion\n"
+"  --set-product-version <version>            Set ProductVersion\n"
+"  --set-icon <path-to-icon>                  Set file icon\n"
+"  --set-requested-execution-level <level>    Pass nothing to see usage\n"
+"  --application-manifest <path-to-file>      Set manifest file\n"
+"  --set-resource-string <key> <value>        Set resource string\n");
+}
 
 bool print_error(const char* message) {
   fprintf(stderr, "Fatal error: %s\n", message);
@@ -31,6 +48,13 @@ bool parse_version_string(const wchar_t* str, unsigned short *v1, unsigned short
 int wmain(int argc, const wchar_t* argv[]) {
   bool loaded = false;
   rescle::ResourceUpdater updater;
+
+  if (argc == 1 ||
+      (argc == 2 && wcscmp(argv[1], L"-h") == 0) ||
+      (argc == 2 && wcscmp(argv[1], L"--help") == 0)) {
+    print_help();
+    return 0;
+  }
 
   for (int i = 1; i < argc; ++i) {
     if (wcscmp(argv[i], L"--set-version-string") == 0 ||
@@ -99,9 +123,7 @@ int wmain(int argc, const wchar_t* argv[]) {
         return print_error("--set-requested-execution-level requires asInvoker, highestAvailable or requireAdministrator");
 
       if (updater.IsApplicationManifestSet())
-      {
         print_warning("--set-requested-execution-level is ignored if --application-manifest is set");
-      }
 
       if (!updater.SetExecutionLevel(argv[++i]))
         return print_error("Unable to set execution level");
@@ -112,9 +134,7 @@ int wmain(int argc, const wchar_t* argv[]) {
         return print_error("--application-manifest requires local path");
 
       if (updater.IsExecutionLevelSet())
-      {
         print_warning("--set-requested-execution-level is ignored if --application-manifest is set");
-      }
 
       if (!updater.SetApplicationManifest(argv[++i]))
         return print_error("Unable to set application manifest");
@@ -134,12 +154,16 @@ int wmain(int argc, const wchar_t* argv[]) {
         return print_error("Unable to change string");
 
     } else {
-      if (loaded)
-        return print_error("Unexpected trailing arguments");
+      if (loaded) {
+        fprintf(stderr, "Unrecognized argument: \"%ls\"\n", argv[i]);
+        return 1;
+      }
 
       loaded = true;
-      if (!updater.Load(argv[i]))
-        return print_error("Unable to load file");
+      if (!updater.Load(argv[i])) {
+        fprintf(stderr, "Unable to load file: \"%ls\"\n", argv[i]);
+        return 1;
+      }
 
     }
   }
