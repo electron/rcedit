@@ -10,7 +10,19 @@
 namespace {
 
 void print_help() {
-  fprintf(stdout, "Rcedit " RCEDIT_VERSION ":\n");
+  fprintf(stdout,
+"Rcedit " RCEDIT_VERSION ": Edit resources of exe.\n\n"
+"Usage: rcedit <filename> [options...]\n\n"
+"Options:\n"
+"  -h, --help                                 Show this message\n"
+"  --set-version-string <key> <value>         Set version string\n"
+"  --get-version-string <key>                 Print version string\n"
+"  --set-file-version <version>               Set FileVersion\n"
+"  --set-product-version <version>            Set ProductVersion\n"
+"  --set-icon <path-to-icon>                  Set file icon\n"
+"  --set-requested-execution-level <level>    Pass nothing to see usage\n"
+"  --application-manifest <path-to-file>      Set manifest file\n"
+"  --set-resource-string <key> <value>        Set resource string\n");
 }
 
 bool print_error(const char* message) {

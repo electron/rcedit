@@ -22,6 +22,12 @@ If you have modified the gyp files, you should regenerate the solution files:
 
 ## Docs
 
+Show help:
+
+```bash
+$ rcedit -h
+```
+
 Set version string:
 
 ```bash
