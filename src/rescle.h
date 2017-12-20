@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2013 GitHub, Inc. All rights reserved.
+// Copyright (c) 2013 GitHub, Inc. All rights reserved.
 // Use of this source code is governed by MIT license that can be found in the
 // LICENSE file.
 //
@@ -131,6 +131,8 @@ class ResourceUpdater {
   bool SetFileVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
   bool ChangeString(WORD languageId, UINT id, const WCHAR* value);
   bool ChangeString(UINT id, const WCHAR* value);
+  const WCHAR* GetString(WORD languageId, UINT id);
+  const WCHAR* GetString(UINT id);
   bool SetIcon(const WCHAR* path, const LANGID& langId, UINT iconBundle);
   bool SetIcon(const WCHAR* path, const LANGID& langId);
   bool SetIcon(const WCHAR* path);

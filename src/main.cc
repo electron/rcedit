@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2013 GitHub, Inc. All rights reserved.
+// Copyright (c) 2013 GitHub, Inc. All rights reserved.
 // Use of this source code is governed by MIT license that can be found in the
 // LICENSE file.
 
@@ -22,7 +22,8 @@ void print_help() {
 "  --set-icon <path-to-icon>                  Set file icon\n"
 "  --set-requested-execution-level <level>    Pass nothing to see usage\n"
 "  --application-manifest <path-to-file>      Set manifest file\n"
-"  --set-resource-string <key> <value>        Set resource string\n");
+"  --set-resource-string <key> <value>        Set resource string\n"
+"  --get-resource-string <key>                Get resource string\n");
 }
 
 bool print_error(const char* message) {
@@ -152,6 +153,23 @@ int wmain(int argc, const wchar_t* argv[]) {
       const wchar_t* value = argv[++i];
       if (!updater.ChangeString(key_id, value))
         return print_error("Unable to change string");
+
+    } else if (wcscmp(argv[i], L"--get-resource-string") == 0 ||
+      wcscmp(argv[i], L"-grs") == 0) {
+      if (argc - i < 2)
+        return print_error("--get-resource-string requires int 'Key'");
+
+      const wchar_t* key = argv[++i];
+      unsigned int key_id = 0;
+      if (swscanf_s(key, L"%d", &key_id) != 1)
+        return print_error("Unable to parse id");
+
+      const wchar_t* result = updater.GetString(key_id);
+      if (!result)
+        return print_error("Unable to get resource string");
+
+      fwprintf(stdout, L"%s", result);
+      return 0;  // no changes made
 
     } else {
       if (loaded) {

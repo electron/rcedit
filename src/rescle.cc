@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2013 GitHub, Inc. All rights reserved.
+// Copyright (c) 2013 GitHub, Inc. All rights reserved.
 // Use of this source code is governed by MIT license that can be found in the
 // LICENSE file.
 //
@@ -551,6 +551,29 @@ bool ResourceUpdater::ChangeString(UINT id, const WCHAR* value) {
   LANGID langId = stringTableMap_.empty() ? kLangEnUs
                                           : stringTableMap_.begin()->first;
   return ChangeString(langId, id, value);
+}
+
+const WCHAR* ResourceUpdater::GetString(WORD languageId, UINT id) {
+  StringTable& table = stringTableMap_[languageId];
+
+  UINT blockId = id / 16;
+  if (table.find(blockId) == table.end()) {
+    // Fill the table until we reach the block.
+    for (size_t i = table.size(); i <= blockId; ++i) {
+      table[i] = std::vector<std::wstring>(16);
+    }
+  }
+
+  assert(table[blockId].size() == 16);
+  UINT blockIndex = id % 16;
+
+  return table[blockId][blockIndex].c_str();
+}
+
+const WCHAR* ResourceUpdater::GetString(UINT id) {
+  LANGID langId = stringTableMap_.empty() ? kLangEnUs
+    : stringTableMap_.begin()->first;
+  return GetString(langId, id);
 }
 
 bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId,
