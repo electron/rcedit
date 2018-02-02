@@ -2,7 +2,7 @@
 
 Command line tool to edit resources of exe file on Windows.
 
-## Exectuables
+## Executables
 
 Prebuilt binaries can be found in the artifacts of appveyor jobs.
 
