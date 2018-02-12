@@ -77,3 +77,17 @@ And you can change multiple things in one command:
 ```bash
 $ rcedit "path-to-exe-or-dll" --set-icon "path-to-ico" --set-file-version "10.7"
 ```
+
+Get version string:
+
+```bash
+$ rcedit "path-to-exe-or-dll" --get-version-string "property"
+```
+
+Use the same properties as `--set-version-string`. Use `"FileVersion"` to get the results of `--set-file-version` and `"ProductVersion"` to get the results of `--get-product-version`.
+
+Get resource string:
+
+```bash
+$ rcedit "path-to-exe-or-dll" --get-resource-string id_number
+```
