@@ -586,26 +586,36 @@ bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId,
   DWORD bytes;
 
   ScopedFile file(path);
-  if (file == INVALID_HANDLE_VALUE)
+  if (file == INVALID_HANDLE_VALUE) {
+    fprintf(stderr, "Cannot open icon file '%s'\n", path);
     return false;
+  }
 
   IconsValue::ICONHEADER& header = icon.header;
-  if (!ReadFile(file, &header, 3 * sizeof(WORD), &bytes, NULL))
+  if (!ReadFile(file, &header, 3 * sizeof(WORD), &bytes, NULL)) {
+    fprintf(stderr, "Cannot read icon header for '%s'\n", path);
     return false;
+  }
 
-  if (header.reserved != 0 || header.type != 1)
+  if (header.reserved != 0 || header.type != 1) {
+    fprintf(stderr, "Reserved header is not 0 or image type is not icon for '%s'\n", path);
     return false;
+  }
 
   header.entries.resize(header.count);
-  if (!ReadFile(file, header.entries.data(), header.count * sizeof(IconsValue::ICONENTRY), &bytes, NULL))
+  if (!ReadFile(file, header.entries.data(), header.count * sizeof(IconsValue::ICONENTRY), &bytes, NULL)) {
+    fprintf(stderr, "Cannot read icon metadata for '%s'\n", path);
     return false;
+  }
 
   icon.images.resize(header.count);
   for (size_t i = 0; i < header.count; ++i) {
     icon.images[i].resize(header.entries[i].bytesInRes);
     SetFilePointer(file, header.entries[i].imageOffset, NULL, FILE_BEGIN);
-    if (!ReadFile(file, icon.images[i].data(), icon.images[i].size(), &bytes, NULL))
+    if (!ReadFile(file, icon.images[i].data(), icon.images[i].size(), &bytes, NULL)) {
+      fprintf(stderr, "Cannot read icon data for '%s'\n", path);
       return false;
+    }
   }
 
   icon.grpHeader.resize(3 * sizeof(WORD) + header.count * sizeof(GRPICONENTRY));
