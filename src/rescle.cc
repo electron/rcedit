@@ -13,6 +13,7 @@
 #include <iomanip> // setw, setfill
 #include <fstream>
 #include <codecvt>
+#include <algorithm>
 
 namespace rescle {
 
@@ -417,6 +418,7 @@ bool ResourceUpdater::Load(const WCHAR* filename) {
   EnumResourceNamesW(module_, RT_GROUP_ICON, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
   EnumResourceNamesW(module_, RT_ICON, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
   EnumResourceNamesW(module_, RT_MANIFEST, OnEnumResourceManifest, reinterpret_cast<LONG_PTR>(this));
+  EnumResourceNamesW(module_, RT_RCDATA, OnEnumResourceName, reinterpret_cast<LONG_PTR>(this));
 
   return true;
 }
@@ -551,6 +553,43 @@ bool ResourceUpdater::ChangeString(UINT id, const WCHAR* value) {
   LANGID langId = stringTableMap_.empty() ? kLangEnUs
                                           : stringTableMap_.begin()->first;
   return ChangeString(langId, id, value);
+}
+
+bool ResourceUpdater::ChangeRcData(UINT id, const WCHAR* pathToResource) {
+  auto rcDataLngPairIt = std::find_if(rcDataLngMap_.begin(), rcDataLngMap_.end(), [=](const auto& rcDataLngPair) {
+    return rcDataLngPair.second.find(id) != rcDataLngPair.second.end();
+  });
+
+  if (rcDataLngPairIt == rcDataLngMap_.end()) {
+    fprintf(stderr, "Cannot find RCDATA with id '%u'\n", id);
+    return false;
+  }
+
+  wchar_t abspath[MAX_PATH] = { 0 };
+  const auto filePath = _wfullpath(abspath, pathToResource, MAX_PATH) ? abspath : pathToResource;
+  ScopedFile newRcDataFile(filePath);
+  if (newRcDataFile == INVALID_HANDLE_VALUE) {
+    fprintf(stderr, "Cannot open new data file '%ws'\n", filePath);
+    return false;
+  }
+
+  const auto dwFileSize = GetFileSize(newRcDataFile, NULL);
+  if (dwFileSize == INVALID_FILE_SIZE) {
+    fprintf(stderr, "Cannot get file size for '%ws'\n", filePath);
+    return false;
+  }
+
+  auto& rcData = rcDataLngPairIt->second[id];
+  rcData.clear();
+  rcData.resize(dwFileSize);
+
+  DWORD dwBytesRead{ 0 };
+  if (!ReadFile(newRcDataFile, rcData.data(), dwFileSize, &dwBytesRead, NULL)) {
+    fprintf(stderr, "Cannot read file '%ws'\n", filePath);
+    return false;
+  }
+
+  return true;
 }
 
 const WCHAR* ResourceUpdater::GetString(WORD languageId, UINT id) {
@@ -758,6 +797,15 @@ bool ResourceUpdater::Commit() {
     }
   }
 
+  for (const auto& rcDataLangPair : rcDataLngMap_) {
+    for (const auto&rcDataMap : rcDataLangPair.second) {
+      if (!UpdateResourceW(ru.Get(), RT_RCDATA, reinterpret_cast<LPWSTR>(rcDataMap.first),
+                           rcDataLangPair.first, (LPVOID)rcDataMap.second.data(), rcDataMap.second.size())) {
+        return false;
+      }
+    }
+  }
+
   for (const auto& iLangIconInfoPair : iconBundleMap_) {
     auto langId = iLangIconInfoPair.first;
     auto maxIconId = iLangIconInfoPair.second.maxIconId;
@@ -859,6 +907,19 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
         UINT iconId = reinterpret_cast<ptrdiff_t>(lpszName);
         instance->iconBundleMap_[wIDLanguage].iconBundles[iconId] = nullptr;
         break;
+      }
+      case reinterpret_cast<ptrdiff_t>(RT_RCDATA): {
+        const auto moduleHandle = HMODULE(hModule);
+        HRSRC hResInfo = FindResource(moduleHandle, lpszName, lpszType);
+        DWORD cbResource = SizeofResource(moduleHandle, hResInfo);
+        HGLOBAL hResData = LoadResource(moduleHandle, hResInfo);
+
+        const auto *pResource = (const BYTE *)LockResource(hResData);
+        const auto resId = reinterpret_cast<ptrdiff_t>(lpszName);
+        instance->rcDataLngMap_[wIDLanguage][resId] = std::vector<BYTE>(pResource, pResource + cbResource);
+
+        UnlockResource(hResData);
+        FreeResource(hResData);
       }
       default:
         break;
