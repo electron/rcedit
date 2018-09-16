@@ -885,6 +885,12 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceManifest(HMODULE hModule, LPCTSTR l
 
   int len = strlen(reinterpret_cast<const char*>(pResource));
   std::wstring manifestStringLocal(pResource, pResource + len);
+  
+  size_t start = manifestStringLocal.find(L"<?xml");
+  if (start > 0) {
+    manifestStringLocal = manifestStringLocal.substr(start);
+  }
+  
   size_t found = manifestStringLocal.find(L"requestedExecutionLevel");
   size_t end = manifestStringLocal.find(L"uiAccess");
 
