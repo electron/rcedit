@@ -883,14 +883,16 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceManifest(HMODULE hModule, LPCTSTR l
   HGLOBAL hResData = LoadResource(hModule, hResInfo);
   const BYTE *pResource = (const BYTE *)LockResource(hResData);
 
+  // FIXME(zcbenz): Do a real UTF string convertion.
   int len = strlen(reinterpret_cast<const char*>(pResource));
   std::wstring manifestStringLocal(pResource, pResource + len);
-  
+
+  // FIXME(zcbenz): Strip the BOM instead of doing string search.
   size_t start = manifestStringLocal.find(L"<?xml");
   if (start > 0) {
     manifestStringLocal = manifestStringLocal.substr(start);
   }
-  
+
   size_t found = manifestStringLocal.find(L"requestedExecutionLevel");
   size_t end = manifestStringLocal.find(L"uiAccess");
 
