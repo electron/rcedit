@@ -16,7 +16,7 @@ Prebuilt binaries can be found in the artifacts of appveyor jobs.
 
 If you have modified the gyp files, you should regenerate the solution files:
 
-1. Make sure you have gyp is configured in your system. If not, clone gyp from
+1. Make sure you have gyp configured on your system. If not, clone gyp from
    https://chromium.googlesource.com/external/gyp
 2. Run `gyp rcedit.gyp --depth .`
 
