@@ -23,7 +23,8 @@ void print_help() {
 "  --set-requested-execution-level <level>    Pass nothing to see usage\n"
 "  --application-manifest <path-to-file>      Set manifest file\n"
 "  --set-resource-string <key> <value>        Set resource string\n"
-"  --get-resource-string <key>                Get resource string\n");
+"  --get-resource-string <key>                Get resource string\n"
+"  --set-rcdata <key> <path-to-file>          Replace RCDATA by integer id\n");
 }
 
 bool print_error(const char* message) {
@@ -154,6 +155,18 @@ int wmain(int argc, const wchar_t* argv[]) {
       if (!updater.ChangeString(key_id, value))
         return print_error("Unable to change string");
 
+    } else if (wcscmp(argv[i], L"--set-rcdata") == 0) {
+      if (argc - i < 3)
+        return print_error("--set-rcdata requires int 'Key' and path to resource 'Value'");
+
+      const wchar_t* key = argv[++i];
+      unsigned int key_id = 0;
+      if (swscanf_s(key, L"%d", &key_id) != 1)
+        return print_error("Unable to parse id");
+
+      const wchar_t* pathToResource = argv[++i];
+      if (!updater.ChangeRcData(key_id, pathToResource))
+        return print_error("Unable to change RCDATA");
     } else if (wcscmp(argv[i], L"--get-resource-string") == 0 ||
       wcscmp(argv[i], L"-grs") == 0) {
       if (argc - i < 2)

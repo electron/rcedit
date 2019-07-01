@@ -109,6 +109,9 @@ class ResourceUpdater {
   typedef std::map<WORD, StringTable> StringTableMap;
   typedef std::map<LANGID, VersionInfo> VersionStampMap;
   typedef std::map<UINT, std::unique_ptr<IconsValue>> IconTable;
+  typedef std::vector<BYTE> RcDataValue;
+  typedef std::map<ptrdiff_t, RcDataValue> RcDataMap;
+  typedef std::map<LANGID, RcDataMap> RcDataLangMap;
 
   struct IconResInfo {
     UINT maxIconId = 0;
@@ -131,6 +134,7 @@ class ResourceUpdater {
   bool SetFileVersion(unsigned short v1, unsigned short v2, unsigned short v3, unsigned short v4);
   bool ChangeString(WORD languageId, UINT id, const WCHAR* value);
   bool ChangeString(UINT id, const WCHAR* value);
+  bool ChangeRcData(UINT id, const WCHAR* pathToResource);
   const WCHAR* GetString(WORD languageId, UINT id);
   const WCHAR* GetString(UINT id);
   bool SetIcon(const WCHAR* path, const LANGID& langId, UINT iconBundle);
@@ -158,6 +162,7 @@ class ResourceUpdater {
   VersionStampMap versionStampMap_;
   StringTableMap stringTableMap_;
   IconTableMap iconBundleMap_;
+  RcDataLangMap rcDataLngMap_;
 };
 
 class ScopedResourceUpdater {
