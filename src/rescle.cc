@@ -75,6 +75,7 @@ typedef struct _VS_VERSION_ROOT {
 // The default en-us LANGID.
 LANGID kLangEnUs = 1033;
 LANGID kCodePageEnUs = 1200;
+UINT   kDefaultIconBundle = 0;
 
 template<typename T>
 inline T round(T value, int modula = 4) {
@@ -641,6 +642,9 @@ bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId,
 }
 
 bool ResourceUpdater::SetIcon(const WCHAR* path, const LANGID& langId) {
+  if (iconBundleMap_[langId].iconBundles.empty()) {
+    return SetIcon(path, langId, kDefaultIconBundle);
+  }
   UINT iconBundle = iconBundleMap_[langId].iconBundles.begin()->first;
   return SetIcon(path, langId, iconBundle);
 }
