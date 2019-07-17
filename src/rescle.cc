@@ -958,10 +958,17 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceManifest(HMODULE hModule, LPCTSTR l
     manifestStringLocal = manifestStringLocal.substr(start);
   }
 
+  // Support alternative formatting, such as using " vs ' and level="..." on another line
   size_t found = manifestStringLocal.find(L"requestedExecutionLevel");
-  size_t end = manifestStringLocal.find(L"uiAccess");
+  size_t level = manifestStringLocal.find(L"level=\"", found);
+  size_t end = manifestStringLocal.find(L"\"", level + 7);
+  if (level < 0)
+  {
+	  level = manifestStringLocal.find(L"level=\'", found);
+	  end = manifestStringLocal.find(L"\'", level + 7);
+  }
 
-  instance->originalExecutionLevel_ = manifestStringLocal.substr(found +31 , end - found - 33);
+  instance->originalExecutionLevel_ = manifestStringLocal.substr(level + 7, end - level - 7);
 
   // also store original manifestString
   instance->manifestString_ = manifestStringLocal;
