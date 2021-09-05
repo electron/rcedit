@@ -167,7 +167,7 @@ class ResourceUpdater {
 
 class ScopedResourceUpdater {
  public:
-  ScopedResourceUpdater(const WCHAR* filename, bool deleteOld);
+  ScopedResourceUpdater(std::wstring filename, bool deleteOld);
   ~ScopedResourceUpdater();
 
   HANDLE Get() const;
@@ -175,7 +175,9 @@ class ScopedResourceUpdater {
 
  private:
   bool EndUpdate(bool doesCommit);
+  bool UpdateChecksum();
 
+  std::wstring filename_;
   HANDLE handle_;
   bool commited_ = false;
 };
