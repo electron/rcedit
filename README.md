@@ -9,8 +9,12 @@ Prebuilt binaries can be found in the artifacts of appveyor jobs.
 ## Building
 
 1. Clone the repository
-2. Open `rcedit.sln` with Visual Studio 2015 or above
-3. Build
+2. Create a build directory, run cmake, open in Visual Studio and build
+```bash
+$ mkdir build
+$ cd build
+$ cmake ..
+```
 
 ## Generate solution files
 
