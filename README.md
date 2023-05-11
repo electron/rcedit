@@ -12,6 +12,16 @@ Prebuilt binaries can be found in the artifacts of appveyor jobs.
 2. Open `rcedit.sln` with Visual Studio 2015 or above
 3. Build
 
+### Building from the command line
+
+1. Clone the repository
+2. Open a Visual Studio command prompt, e.g. using `vcvars32.bat` and `cd`
+   into `src` at the cloned rcedit dir.
+3. `rc rcedit.rc`
+4. `cl main.cc rescle.cc rcedit.res /EHsc /Fe:rcedit.exe`
+6. To target Windows XP, add to the 2nd line:
+   `/DWINVER=0x501 /D_WIN32_WINNT=0x501 /link /SUBSYSTEM:CONSOLE,5.01` .
+
 ## Generate solution files
 
 If you have modified the gyp files, you should regenerate the solution files:
