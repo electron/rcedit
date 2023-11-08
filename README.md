@@ -1,24 +1,22 @@
-# rcedit [![Build status](https://ci.appveyor.com/api/projects/status/99eokln2emhidcej?svg=true)](https://ci.appveyor.com/project/zcbenz/rcedit/branch/master)
+# rcedit
+
+[![Continuous Integration](https://github.com/electron/rcedit/actions/workflows/ci.yml/badge.svg)](https://github.com/electron/rcedit/actions/workflows/ci.yml)
 
 Command line tool to edit resources of exe file on Windows.
 
 ## Executables
 
-Prebuilt binaries can be found in the artifacts of appveyor jobs.
+Prebuilt binaries can be found in the releases.
 
 ## Building
 
+To build you need CMake 3.15+ and Visual Studio 2015 or above.
+
 1. Clone the repository
-2. Open `rcedit.sln` with Visual Studio 2015 or above
-3. Build
-
-## Generate solution files
-
-If you have modified the gyp files, you should regenerate the solution files:
-
-1. Make sure you have gyp configured on your system. If not, clone gyp from
-   https://chromium.googlesource.com/external/gyp
-2. Run `gyp rcedit.gyp --depth .`
+2. Create a build directory: `cmake -E make_directory build`
+3. Change to the build directory: `cd build`
+4. Make the CMake project: `cmake ..`
+5. Build: `cmake --build .`
 
 ## Docs
 

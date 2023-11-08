@@ -4,14 +4,53 @@
 
 #include <string.h>
 
+#include <windows.h>
+#include <winver.h>
+
 #include "rescle.h"
-#include "version.h"
 
 namespace {
 
-void print_help() {
+LPVOID get_file_version_info() {
+  DWORD zero = 0;
+  DWORD filename_buffer_size = MAX_PATH;
+  LPWSTR filename = nullptr;
+  SetLastError(ERROR_SUCCESS);
+
+  do {
+    filename = new wchar_t[filename_buffer_size];
+
+    GetModuleFileNameW(NULL, filename, filename_buffer_size);
+
+    // Double the buffer size in case the path is longer
+    filename_buffer_size *= 2;
+  } while (GetLastError() == ERROR_INSUFFICIENT_BUFFER);
+
+  if (GetLastError() != ERROR_SUCCESS) {
+    return nullptr;
+  }
+
+  DWORD file_ver_info_size = GetFileVersionInfoSizeW(filename, &zero);
+  if (file_ver_info_size == 0) {
+    free(filename);
+    return nullptr;
+  }
+
+  LPVOID file_ver_info = operator new(file_ver_info_size);
+  if (!GetFileVersionInfoW(filename, NULL, file_ver_info_size, file_ver_info)) {
+    free(file_ver_info);
+    free(filename);
+    return nullptr;
+  }
+
+  free(filename);
+
+  return file_ver_info;
+}
+
+void print_help(VS_FIXEDFILEINFO* file_info) {
   fprintf(stdout,
-"Rcedit " RCEDIT_VERSION ": Edit resources of exe.\n\n"
+"Rcedit %d.%d.%d: Edit resources of exe.\n\n"
 "Usage: rcedit <filename> [options...]\n\n"
 "Options:\n"
 "  -h, --help                                 Show this message\n"
@@ -24,7 +63,10 @@ void print_help() {
 "  --application-manifest <path-to-file>      Set manifest file\n"
 "  --set-resource-string <key> <value>        Set resource string\n"
 "  --get-resource-string <key>                Get resource string\n"
-"  --set-rcdata <key> <path-to-file>          Replace RCDATA by integer id\n");
+"  --set-rcdata <key> <path-to-file>          Replace RCDATA by integer id\n",
+(file_info->dwProductVersionMS >> 16) & 0xff,
+(file_info->dwProductVersionMS >>  0) & 0xff,
+(file_info->dwProductVersionLS >> 16) & 0xff);
 }
 
 bool print_error(const char* message) {
@@ -54,7 +96,17 @@ int wmain(int argc, const wchar_t* argv[]) {
   if (argc == 1 ||
       (argc == 2 && wcscmp(argv[1], L"-h") == 0) ||
       (argc == 2 && wcscmp(argv[1], L"--help") == 0)) {
-    print_help();
+    UINT ignored = 0;
+    VS_FIXEDFILEINFO* file_info = nullptr;
+    LPVOID file_version_info = get_file_version_info();
+
+    if (file_version_info == nullptr || !VerQueryValueW(file_version_info, L"\\", (LPVOID*) &file_info, &ignored)) {
+      free(file_version_info);
+      return print_error("Could not determine version of rcedit");
+    }
+
+    print_help(file_info);
+    free(file_version_info);
     return 0;
   }
 

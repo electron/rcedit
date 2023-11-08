@@ -1,0 +1,18 @@
+{
+  "plugins": [
+    "semantic-release-export-data",
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          { "path": "dist/rcedit-x64.exe" },
+          { "path": "dist/rcedit-x86.exe" }
+        ],
+        "draftRelease": true
+      }
+    ]
+  ],
+  "branches": [ "master" ]
+}
