@@ -10,6 +10,9 @@
         'src/rcedit.rc',
         'src/version.h',
       ],
+      'libraries': [
+        'imagehlp.lib',
+      ],
       'msvs_settings': {
         'VCLinkerTool': {
           'SubSystem': 1, # console executable

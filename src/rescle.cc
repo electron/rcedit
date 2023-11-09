@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <atlstr.h>
+#include <imagehlp.h>
 #include <sstream> // wstringstream
 #include <iomanip> // setw, setfill
 #include <fstream>
@@ -93,8 +94,8 @@ std::wstring ReadFileToString(const wchar_t* filename) {
 
 class ScopedFile {
  public:
-  ScopedFile(const WCHAR* path)
-    : file_(CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) {}
+  ScopedFile(const WCHAR* path, DWORD access = GENERIC_READ)
+    : file_(CreateFileW(path, access, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) {}
   ~ScopedFile() { CloseHandle(file_); }
 
   operator HANDLE() { return file_; }
@@ -701,7 +702,7 @@ bool ResourceUpdater::Commit() {
   FreeLibrary(module_);
   module_ = NULL;
 
-  ScopedResourceUpdater ru(filename_.c_str(), false);
+  ScopedResourceUpdater ru(filename_, false);
   if (ru.Get() == NULL) {
     return false;
   }
@@ -979,8 +980,8 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceManifest(HMODULE hModule, LPCTSTR l
   return TRUE;   // Keep going
 }
 
-ScopedResourceUpdater::ScopedResourceUpdater(const WCHAR* filename, bool deleteOld)
-    : handle_(BeginUpdateResourceW(filename, deleteOld)) {
+ScopedResourceUpdater::ScopedResourceUpdater(std::wstring filename, bool deleteOld)
+    : filename_(filename), handle_(BeginUpdateResourceW(filename.c_str(), deleteOld)) {
 }
 
 ScopedResourceUpdater::~ScopedResourceUpdater() {
@@ -995,7 +996,7 @@ HANDLE ScopedResourceUpdater::Get() const {
 
 bool ScopedResourceUpdater::Commit() {
   commited_ = true;
-  return EndUpdate(true);
+  return EndUpdate(true) && UpdateChecksum();
 }
 
 bool ScopedResourceUpdater::EndUpdate(bool doesCommit) {
@@ -1003,6 +1004,47 @@ bool ScopedResourceUpdater::EndUpdate(bool doesCommit) {
   BOOL bResult = EndUpdateResourceW(handle_, fDiscard);
   DWORD e = GetLastError();
   return bResult ? true : false;
+}
+
+bool ScopedResourceUpdater::UpdateChecksum() {
+  const WCHAR* path = filename_.c_str();
+  ScopedFile binFile(path, GENERIC_READ|GENERIC_WRITE);
+  if (binFile == INVALID_HANDLE_VALUE) {
+    fprintf(stderr, "Cannot open '%ws'\n", path);
+    return false;
+  }
+  DWORD fileSize = GetFileSize(binFile, NULL);
+  if (fileSize == INVALID_FILE_SIZE) {
+    fprintf(stderr, "Cannot get file size for '%ws'\n", path);
+    return false;
+  }
+
+  HANDLE hFilemap = CreateFileMapping(binFile, NULL, PAGE_READWRITE, 0, 0, NULL);
+  if (!hFilemap) {
+    fprintf(stderr, "CreateFileMapping(%ws) failed\n", path);
+    return false;
+  }
+
+  void* view = MapViewOfFile(hFilemap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+  if (!view) {
+    fprintf(stderr, "Cannot map '%ws' into memory\n", path);
+    CloseHandle(hFilemap);
+    return false;
+  }
+
+  bool ret = false;
+  DWORD originalSum, checkSum;
+  IMAGE_NT_HEADERS *ntHeader = CheckSumMappedFile(view, fileSize, &originalSum, &checkSum);
+  if (!ntHeader) {
+    fprintf(stderr, "CheckSumMappedFile failed\n");
+  } else {
+    ntHeader->OptionalHeader.CheckSum = checkSum;
+    ret = true;
+  }
+
+  UnmapViewOfFile(view);
+  CloseHandle(hFilemap);
+  return ret;
 }
 
 }  // namespace rescle
