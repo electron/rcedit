@@ -13,37 +13,30 @@ namespace {
 
 LPVOID get_file_version_info() {
   DWORD zero = 0;
-  DWORD filename_buffer_size = MAX_PATH;
-  LPWSTR filename = nullptr;
+  std::vector<wchar_t> filename(MAX_PATH);
   SetLastError(ERROR_SUCCESS);
 
   do {
-    filename = new wchar_t[filename_buffer_size];
-
-    GetModuleFileNameW(NULL, filename, filename_buffer_size);
+    GetModuleFileNameW(NULL, filename.data(), filename.size());
 
     // Double the buffer size in case the path is longer
-    filename_buffer_size *= 2;
+    filename.resize(filename.size() * 2);
   } while (GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 
   if (GetLastError() != ERROR_SUCCESS) {
     return nullptr;
   }
 
-  DWORD file_ver_info_size = GetFileVersionInfoSizeW(filename, &zero);
+  DWORD file_ver_info_size = GetFileVersionInfoSizeW(filename.data(), &zero);
   if (file_ver_info_size == 0) {
-    free(filename);
     return nullptr;
   }
 
   LPVOID file_ver_info = operator new(file_ver_info_size);
-  if (!GetFileVersionInfoW(filename, NULL, file_ver_info_size, file_ver_info)) {
+  if (!GetFileVersionInfoW(filename.data(), NULL, file_ver_info_size, file_ver_info)) {
     free(file_ver_info);
-    free(filename);
     return nullptr;
   }
-
-  free(filename);
 
   return file_ver_info;
 }
