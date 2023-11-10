@@ -6,7 +6,7 @@ Command line tool to edit resources of exe file on Windows.
 
 ## Executables
 
-Prebuilt binaries can be found in the releases.
+Prebuilt binaries can be found in the [GitHub releases](https://github.com/electron/rcedit/releases).
 
 ## Building
 
