@@ -3,6 +3,7 @@
 // LICENSE file.
 
 #include <string.h>
+#include <vector>
 
 #include <windows.h>
 #include <winver.h>
@@ -11,7 +12,7 @@
 
 namespace {
 
-LPVOID get_file_version_info() {
+std::vector<uint8_t> get_file_version_info() {
   DWORD zero = 0;
   std::vector<wchar_t> filename(MAX_PATH);
   SetLastError(ERROR_SUCCESS);
@@ -24,18 +25,17 @@ LPVOID get_file_version_info() {
   } while (GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 
   if (GetLastError() != ERROR_SUCCESS) {
-    return nullptr;
+    return std::vector<uint8_t>();
   }
 
   DWORD file_ver_info_size = GetFileVersionInfoSizeW(filename.data(), &zero);
   if (file_ver_info_size == 0) {
-    return nullptr;
+    return std::vector<uint8_t>();
   }
 
-  LPVOID file_ver_info = operator new(file_ver_info_size);
-  if (!GetFileVersionInfoW(filename.data(), NULL, file_ver_info_size, file_ver_info)) {
-    free(file_ver_info);
-    return nullptr;
+  std::vector<uint8_t> file_ver_info(file_ver_info_size);
+  if (!GetFileVersionInfoW(filename.data(), NULL, file_ver_info.size(), file_ver_info.data())) {
+    return std::vector<uint8_t>();
   }
 
   return file_ver_info;
@@ -91,15 +91,13 @@ int wmain(int argc, const wchar_t* argv[]) {
       (argc == 2 && wcscmp(argv[1], L"--help") == 0)) {
     UINT ignored = 0;
     VS_FIXEDFILEINFO* file_info = nullptr;
-    LPVOID file_version_info = get_file_version_info();
+    std::vector<uint8_t> file_version_info = get_file_version_info();
 
-    if (file_version_info == nullptr || !VerQueryValueW(file_version_info, L"\\", (LPVOID*) &file_info, &ignored)) {
-      free(file_version_info);
+    if (file_version_info.size() == 0 || !VerQueryValueW(file_version_info, L"\\", (LPVOID*) &file_info, &ignored)) {
       return print_error("Could not determine version of rcedit");
     }
 
     print_help(file_info);
-    free(file_version_info);
     return 0;
   }
 
