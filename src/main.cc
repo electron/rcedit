@@ -93,7 +93,7 @@ int wmain(int argc, const wchar_t* argv[]) {
     VS_FIXEDFILEINFO* file_info = nullptr;
     std::vector<uint8_t> file_version_info = get_file_version_info();
 
-    if (file_version_info.size() == 0 || !VerQueryValueW(file_version_info, L"\\", (LPVOID*) &file_info, &ignored)) {
+    if (file_version_info.size() == 0 || !VerQueryValueW(file_version_info.data(), L"\\", (LPVOID*) &file_info, &ignored)) {
       return print_error("Could not determine version of rcedit");
     }
 
