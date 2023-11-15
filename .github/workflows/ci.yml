@@ -72,9 +72,9 @@ jobs:
         run: |
           set -eo pipefail
           dist/rcedit-x64.exe dist/rcedit-x86.exe --set-product-version $VERSION --set-file-version $VERSION
-          dist/rcedit-x86.exe -h | grep -q Rcedit v$VERSION
+          dist/rcedit-x86.exe -h | grep -q "Rcedit v$VERSION"
           dist/rcedit-x86.exe dist/rcedit-x64.exe --set-product-version $VERSION --set-file-version $VERSION
-          dist/rcedit-x64.exe -h | grep -q Rcedit v$VERSION
+          dist/rcedit-x64.exe -h | grep -q "Rcedit v$VERSION"
         env:
           VERSION: ${{ steps.get-next-version.outputs.new-release-version }}
       - name: Run semantic release
