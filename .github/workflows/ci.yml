@@ -1,0 +1,81 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      with:
+        fetch-depth: 1
+    - name: Build
+      run: |
+        cmake -E make_directory build/x64
+        cmake -E make_directory build/Win32
+        cd build/x64
+        cmake -A x64 ../../
+        cmake --build . --config RelWithDebInfo
+        cd ../../build/Win32
+        cmake -A Win32 ../../
+        cmake --build . --config RelWithDebInfo
+    - name: Copy to dist
+      run: |
+        cmake -E make_directory dist
+        cmake -E copy build/x64/RelWithDebInfo/rcedit.exe dist/rcedit-x64.exe 
+        cmake -E copy build/Win32/RelWithDebInfo/rcedit.exe dist/rcedit-x86.exe 
+    - name: Print help
+      run: |
+        dist/rcedit-x86.exe -h
+        dist/rcedit-x64.exe -h
+    - name: Upload artifacts
+      uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+      with:
+        name: dist
+        path: dist/
+
+  release:
+    name: Release
+    runs-on: windows-2022
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: dist
+          path: dist/
+      - run: npm install -g semantic-release@22.0.6 semantic-release-export-data@v1.0.1
+      - run: npx semantic-release@22.0.6 --dry-run
+        id: get-next-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Stamp version
+        if: steps.get-next-version.outputs.new-release-published == 'true'
+        run: |
+          set -eo pipefail
+          dist/rcedit-x64.exe dist/rcedit-x86.exe --set-product-version $VERSION --set-file-version $VERSION
+          dist/rcedit-x86.exe -h | grep -q Rcedit v$VERSION
+          dist/rcedit-x86.exe dist/rcedit-x64.exe --set-product-version $VERSION --set-file-version $VERSION
+          dist/rcedit-x64.exe -h | grep -q Rcedit v$VERSION
+        env:
+          VERSION: ${{ steps.get-next-version.outputs.new-release-version }}
+      - name: Run semantic release
+        run: npx semantic-release@22.0.6 --dry-run
+        if: steps.get-next-version.outputs.new-release-published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
