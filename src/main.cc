@@ -43,7 +43,7 @@ std::vector<uint8_t> get_file_version_info() {
 
 void print_help(VS_FIXEDFILEINFO* file_info) {
   fprintf(stdout,
-"Rcedit %d.%d.%d: Edit resources of exe.\n\n"
+"Rcedit v%d.%d.%d: Edit resources of exe.\n\n"
 "Usage: rcedit <filename> [options...]\n\n"
 "Options:\n"
 "  -h, --help                                 Show this message\n"
