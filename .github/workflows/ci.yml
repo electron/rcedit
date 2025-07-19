@@ -14,7 +14,8 @@ permissions:
 jobs:
   build:
     name: Build
-    runs-on: windows-2022
+    # An ARM runner can run all three architectures, while an x64 runner can't run arm64 binaries
+    runs-on: windows-11-arm
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
@@ -23,23 +24,29 @@ jobs:
       run: |
         cmake -E make_directory build/x64
         cmake -E make_directory build/Win32
+        cmake -E make_directory build/arm64
         cd build/x64
         cmake -A x64 ../../
         cmake --build . --config RelWithDebInfo
         cd ../../build/Win32
         cmake -A Win32 ../../
         cmake --build . --config RelWithDebInfo
+        cd ../../build/arm64
+        cmake -A arm64 ../../
+        cmake --build . --config RelWithDebInfo
     - name: Copy to dist
       run: |
         cmake -E make_directory dist
         cmake -E copy build/x64/RelWithDebInfo/rcedit.exe dist/rcedit-x64.exe 
         cmake -E copy build/Win32/RelWithDebInfo/rcedit.exe dist/rcedit-x86.exe 
+        cmake -E copy build/arm64/RelWithDebInfo/rcedit.exe dist/rcedit-arm64.exe 
     - name: Print help
       shell: bash
       run: |
         set -eo pipefail
         dist/rcedit-x86.exe -h
         dist/rcedit-x64.exe -h
+        dist/rcedit-arm64.exe -h
     - name: Upload artifacts
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
@@ -48,7 +55,7 @@ jobs:
 
   release:
     name: Release
-    runs-on: windows-2022
+    runs-on: windows-11-arm
     needs: build
     if: github.ref == 'refs/heads/main'
     permissions:
@@ -75,6 +82,8 @@ jobs:
           dist/rcedit-x86.exe -h | grep -q "Rcedit v$VERSION"
           dist/rcedit-x86.exe dist/rcedit-x64.exe --set-product-version $VERSION --set-file-version $VERSION
           dist/rcedit-x64.exe -h | grep -q "Rcedit v$VERSION"
+          dist/rcedit-x64.exe dist/rcedit-arm64.exe --set-product-version $VERSION --set-file-version $VERSION
+          dist/rcedit-arm64.exe -h | grep -q "Rcedit v$VERSION"
         env:
           VERSION: ${{ steps.get-next-version.outputs.new-release-version }}
       - name: Run semantic release
