@@ -16,7 +16,7 @@ To build you need CMake 3.15+ and Visual Studio 2015 or above.
 2. Create a build directory: `cmake -E make_directory build`
 3. Change to the build directory: `cd build`
 4. Make the CMake project: `cmake ..`
-5. Build: `cmake --build .`
+5. Build: `cmake --build . --config RelWithDebInfo`
 
 ## Docs
 
