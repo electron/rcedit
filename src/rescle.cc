@@ -902,7 +902,7 @@ BOOL CALLBACK ResourceUpdater::OnEnumResourceLanguage(HANDLE hModule, LPCWSTR lp
       }
       case reinterpret_cast<ptrdiff_t>(RT_ICON): {
         UINT iconId = reinterpret_cast<ptrdiff_t>(lpszName);
-        UINT maxIconId = instance->iconBundleMap_[wIDLanguage].maxIconId;
+        UINT& maxIconId = instance->iconBundleMap_[wIDLanguage].maxIconId;
         if (iconId > maxIconId)
           maxIconId = iconId;
         break;
