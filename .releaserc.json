@@ -8,7 +8,8 @@
       {
         "assets": [
           { "path": "dist/rcedit-x64.exe" },
-          { "path": "dist/rcedit-x86.exe" }
+          { "path": "dist/rcedit-x86.exe" },
+          { "path": "dist/rcedit-arm64.exe" }
         ],
         "draftRelease": true
       }
