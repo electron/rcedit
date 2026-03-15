@@ -197,7 +197,7 @@ std::vector<BYTE> VersionInfo::Serialize() const {
 
       for (const auto& iString : iTable.strings) {
         const auto& stringValue = iString.second;
-        auto strLenNullTerminated = stringValue.length() + 1;
+        auto strLenNullTerminated = wcslen(stringValue.c_str()) + 1;
 
         VersionStampValue stringRaw;
         stringRaw.type = 1;
