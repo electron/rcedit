@@ -1,6 +1,7 @@
 Default/
 ipch/
 build/
+node_modules/
 
 *.swp
 *.sdf

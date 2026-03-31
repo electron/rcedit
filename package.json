@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@semantic-release/exec": "7.1.0"
+  }
+}

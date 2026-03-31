@@ -1,8 +1,13 @@
 {
   "plugins": [
-    "semantic-release-export-data",
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "bash scripts/stamp-version.sh ${nextRelease.version}"
+      }
+    ],
     [
       "@semantic-release/github",
       {

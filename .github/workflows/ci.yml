@@ -52,33 +52,27 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     permissions:
-      contents: write
+      contents: write # for making github release
+      pull-requests: write # for commenting release version
+      issues: write # for commenting release version
     steps:
       - name: Checkout
-        id: checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          persist-credentials: false
+      - name: Download dist
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: dist
           path: dist/
-      - run: npm install -g semantic-release@22.0.6 semantic-release-export-data@v1.0.1
-      - run: npx semantic-release@22.0.6 --dry-run
-        id: get-next-version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Stamp version
-        if: steps.get-next-version.outputs.new-release-published == 'true'
-        shell: bash
-        run: |
-          set -eo pipefail
-          dist/rcedit-x64.exe dist/rcedit-x86.exe --set-product-version $VERSION --set-file-version $VERSION
-          dist/rcedit-x86.exe -h | grep -q "Rcedit v$VERSION"
-          dist/rcedit-x86.exe dist/rcedit-x64.exe --set-product-version $VERSION --set-file-version $VERSION
-          dist/rcedit-x64.exe -h | grep -q "Rcedit v$VERSION"
-        env:
-          VERSION: ${{ steps.get-next-version.outputs.new-release-version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install semantic-release plugins
+        run: npm ci
       - name: Run semantic release
-        run: npx semantic-release@22.0.6
-        if: steps.get-next-version.outputs.new-release-published == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: electron/semantic-trusted-release@03517840010ba30fe5264f4875f4cff066b658d1 # v1.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
